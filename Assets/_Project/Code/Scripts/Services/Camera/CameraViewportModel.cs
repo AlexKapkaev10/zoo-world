@@ -1,9 +1,8 @@
 using System.Collections.Generic;
-using Project.Dates;
 using Project.Entities;
 using UnityEngine;
 
-namespace Project.Models
+namespace Project.Services.CameraService
 {
     public sealed class CameraViewportModel
     {

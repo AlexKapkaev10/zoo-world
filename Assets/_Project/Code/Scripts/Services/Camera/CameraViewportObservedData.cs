@@ -1,4 +1,4 @@
-namespace Project.Dates
+namespace Project.Services.CameraService
 {
     public sealed class CameraViewportObservedData
     {

@@ -5,6 +5,7 @@ using Cysharp.Threading.Tasks;
 using Project.Entities;
 using Project.ScriptableObjects;
 using Project.Services.CameraService;
+using UnityEngine;
 using VContainer;
 using VContainer.Unity;
 
@@ -17,34 +18,35 @@ namespace Project.Services.SpawnEntity
     
     public sealed class SpawnEntityService : ISpawnEntityService
     {
-        private readonly List<IEntity> _entities = new();
-        private readonly ICameraService _cameraService;
-        private readonly IEntityFactory _entityFactory;
-        private readonly SpawnEntityServiceConfig _config;
+        private readonly Dictionary<IEntity, SpawnArchetypeData> _entityMap = new();
         private readonly CancellationTokenSource _spawnCts = new();
-        private readonly Dictionary<IEntity, SpawnArchetypeData> _ruleByEntity = new();
-        private readonly Dictionary<EntityKind, int> _aliveByKind = new();
+        private readonly SpawnEntityModel _spawnModel;
+        private readonly SpawnEntityServiceConfig _config;
+        private readonly EntityPool _pool;
+        private readonly ICameraService _cameraService;
 
-        private EntityPool _pool;
-        
         [Inject]
-        public SpawnEntityService(ICameraService cameraService, IEntityFactory entityFactory, SpawnEntityServiceConfig config)
+        public SpawnEntityService(
+            ICameraService cameraService, 
+            IEntityFactory entityFactory, 
+            SpawnEntityServiceConfig config)
         {
             _config = config;
             _cameraService = cameraService;
-            _entityFactory = entityFactory;
+            
+            _pool = new EntityPool(entityFactory);
+            _spawnModel = new SpawnEntityModel(_config);
         }
         
         public void Start()
         {
-            _pool = new EntityPool(_entityFactory);
             _pool.Prewarm(_config.SpawnData);
             SpawnAsync(_spawnCts.Token).Forget();
         }
 
         public void Tick()
         {
-            foreach (var entity in _entities)
+            foreach (var entity in _entityMap.Keys)
             {
                 entity.TickComponents();
             }
@@ -52,7 +54,7 @@ namespace Project.Services.SpawnEntity
 
         public void FixedTick()
         {
-            foreach (var entity in _entities)
+            foreach (var entity in _entityMap.Keys)
             {
                 entity.FixedTickComponents();
             }
@@ -63,34 +65,36 @@ namespace Project.Services.SpawnEntity
             _spawnCts?.Cancel();
             _spawnCts?.Dispose();
 
-            for (int i = _entities.Count - 1; i >= 0; i--)
+            while (_entityMap.Count > 0)
             {
-                DespawnEntity(_entities[i], releaseToPool: true);
+                using var enumerator = _entityMap.Keys.GetEnumerator();
+                enumerator.MoveNext();
+                DespawnEntity(enumerator.Current, releaseToPool: true);
             }
         }
 
-        private void SpawnEntity(SpawnArchetypeData spawnData)
+        private void SpawnEntity(SpawnArchetypeData spawnData, Vector3 spawnPosition, Quaternion bodyRotation)
         {
             var entity = _pool.Get(spawnData.Archetype);
+            entity.SetPosition(spawnPosition);
+            entity.SetBodyRotation(bodyRotation);
 
             entity.Deactivated += OnEntityDeactivated;
             entity.Destroyed += OnEntityDestroy;
             
-            _entities.Add(entity);
-            _ruleByEntity[entity] = spawnData;
-            IncrementAlive(spawnData.Archetype.Kind);
+            _entityMap[entity] = spawnData;
+            _spawnModel.RegisterSpawn(spawnData.Archetype.Kind);
             _cameraService.AddViewportObserved(entity);
         }
 
         private void DespawnEntity(IEntity entity, bool releaseToPool)
         {
-            if (!_ruleByEntity.Remove(entity, out var spawnArchetypeData))
+            if (!_entityMap.Remove(entity, out var spawnArchetypeData))
             {
                 return;
             }
 
-            _entities.Remove(entity);
-            DecrementAlive(spawnArchetypeData.Archetype.Kind);
+            _spawnModel.RegisterDespawn(spawnArchetypeData.Archetype.Kind);
 
             entity.Deactivated -= OnEntityDeactivated;
             entity.Destroyed -= OnEntityDestroy;
@@ -112,64 +116,18 @@ namespace Project.Services.SpawnEntity
             DespawnEntity(entity, releaseToPool: true);
         }
 
-        private SpawnArchetypeData GetSpawnRule()
-        {
-            List<SpawnArchetypeData> availableRules = new();
-            
-            foreach (var data in _config.SpawnData)
-            {
-                int aliveForKind = _aliveByKind.GetValueOrDefault(data.Archetype.Kind, 0);
-                if (aliveForKind >= data.MaxAliveCount)
-                {
-                    continue;
-                }
-
-                availableRules.Add(data);
-            }
-
-            if (availableRules.Count == 0)
-            {
-                return null;
-            }
-
-            int randomIndex = UnityEngine.Random.Range(0, availableRules.Count);
-            return availableRules[randomIndex];
-        }
-
-        private void IncrementAlive(EntityKind kind)
-        {
-            _aliveByKind[kind] = _aliveByKind.TryGetValue(kind, out int current) ? current + 1 : 1;
-        }
-
-        private void DecrementAlive(EntityKind kind)
-        {
-            if (!_aliveByKind.TryGetValue(kind, out int current))
-            {
-                return;
-            }
-
-            current--;
-            if (current <= 0)
-            {
-                _aliveByKind.Remove(kind);
-                return;
-            }
-
-            _aliveByKind[kind] = current;
-        }
-        
         private async UniTaskVoid SpawnAsync(CancellationToken token)
         {
             while (!token.IsCancellationRequested)
             {
-                SpawnArchetypeData spawnData = GetSpawnRule();
-                if (spawnData != null)
+                if (_spawnModel.TryGetSpawnRequest(out var spawnData, out var spawnPosition, out var bodyRotation))
                 {
-                    SpawnEntity(spawnData);
+                    SpawnEntity(spawnData, spawnPosition, bodyRotation);
                 }
 
                 await UniTask.Delay(TimeSpan.FromSeconds(_config.SpawnIntervalSeconds), cancellationToken: token);
             }
         }
+
     }
 }

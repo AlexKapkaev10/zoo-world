@@ -5,24 +5,8 @@ using UnityEngine;
 
 namespace Project.Entities
 {
-    public interface IEntity
-    {
-        event Action<IEntity> Deactivated;
-        event Action<IEntity> Destroyed;
-        Rigidbody Rigidbody { get; }
-        void SetVisible(bool isVisible);
-        void AddComponent(IEntityRuntimeComponent component);
-        void TickComponents();
-        void FixedTickComponents();
-        void CameraViewportExit();
-        Vector3 GetVelocity();
-        Vector3 GetPosition();
-        Vector3 GetMoveDirection();
-    }
-    
     public sealed class Entity : MonoBehaviour, IEntity
     {
-        [SerializeField] private Rigidbody _rigidbody;
         [SerializeField] private Transform _bodyTransform;
 
         private readonly List<IEntityRuntimeComponent> _components = new();
@@ -30,14 +14,14 @@ namespace Project.Entities
         private readonly List<IEntityFixedTickableComponent> _fixedTickableComponents = new();
         private readonly List<IEntityCollisionComponent> _collisionComponents = new();
 
+        [field: SerializeField] public Rigidbody Rigidbody { get; private set; }
         public event Action<IEntity> Deactivated;
         public event Action<IEntity> Destroyed;
         public Transform Transform => transform;
-        public Rigidbody Rigidbody => _rigidbody;
 
         public Vector3 GetVelocity()
         {
-            return _rigidbody.linearVelocity;
+            return Rigidbody.linearVelocity;
         }
 
         public Vector3 GetPosition()
@@ -50,24 +34,32 @@ namespace Project.Entities
             gameObject.SetActive(isVisible);
         }
 
+        public void SetPosition(Vector3 position)
+        {
+            transform.position = position;
+        }
+
+        public void SetBodyRotation(Quaternion rotation)
+        {
+            _bodyTransform.rotation = rotation;
+        }
+
         public void AddComponent(IEntityRuntimeComponent component)
         {
             component.Initialize(this);
             _components.Add(component);
 
-            if (component is IEntityTickableComponent tickableComponent)
+            switch (component)
             {
-                _tickableComponents.Add(tickableComponent);
-            }
-
-            if (component is IEntityFixedTickableComponent fixedTickableComponent)
-            {
-                _fixedTickableComponents.Add(fixedTickableComponent);
-            }
-
-            if (component is IEntityCollisionComponent collisionComponent)
-            {
-                _collisionComponents.Add(collisionComponent);
+                case IEntityTickableComponent tickableComponent:
+                    _tickableComponents.Add(tickableComponent);
+                    break;
+                case IEntityFixedTickableComponent fixedTickableComponent:
+                    _fixedTickableComponents.Add(fixedTickableComponent);
+                    break;
+                case IEntityCollisionComponent collisionComponent:
+                    _collisionComponents.Add(collisionComponent);
+                    break;
             }
         }
 

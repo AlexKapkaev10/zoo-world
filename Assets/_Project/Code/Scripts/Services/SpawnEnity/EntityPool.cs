@@ -19,14 +19,15 @@ namespace Project.Services.SpawnEntity
 
         public void Prewarm(IEnumerable<SpawnArchetypeData> dates)
         {
-            foreach (SpawnArchetypeData rule in dates)
+            foreach (SpawnArchetypeData data in dates)
             {
-                EnsureQueue(rule.Archetype);
-                for (int i = 0; i < rule.PrewarmCount; i++)
+                EnsureQueue(data.Archetype);
+                
+                for (int i = 0; i < data.PrewarmCount; i++)
                 {
-                    IEntity entity = Create(rule.Archetype);
+                    IEntity entity = Create(data.Archetype);
                     PrepareForRelease(entity);
-                    _availableByArchetype[rule.Archetype].Enqueue(entity);
+                    _availableByArchetype[data.Archetype].Enqueue(entity);
                     _inPool.Add(entity);
                 }
             }

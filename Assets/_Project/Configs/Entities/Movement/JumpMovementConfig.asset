@@ -13,8 +13,10 @@ MonoBehaviour:
   m_Name: JumpMovementConfig
   m_EditorClassIdentifier: 
   <HorizontalSpeed>k__BackingField: 5
-  <JumpForce>k__BackingField: 5
-  <JumpInterval>k__BackingField: 1
+  <JumpForce>k__BackingField: 50
+  <MinJumpInterval>k__BackingField: 2
+  <MaxJumpInterval>k__BackingField: 3
+  <GroundCheckLock>k__BackingField: 0.2
   <GroundMask>k__BackingField:
     serializedVersion: 2
     m_Bits: 128

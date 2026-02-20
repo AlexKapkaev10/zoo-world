@@ -14,12 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   <SpawnData>k__BackingField:
   - Archetype: {fileID: 11400000, guid: edd048d013ccd414ca6ff1d89de109d4, type: 2}
-    PrewarmCount: 0
-    MaxAliveCount: 0
+    PrewarmCount: 1
+    MaxAliveCount: 1
   - Archetype: {fileID: 11400000, guid: 83548b2ef20db4d4a94e94be7c379d53, type: 2}
-    PrewarmCount: 10
-    MaxAliveCount: 20
+    PrewarmCount: 1
+    MaxAliveCount: 1
   - Archetype: {fileID: 11400000, guid: 2751f6e23409e774ba7deb5341f459f4, type: 2}
-    PrewarmCount: 0
-    MaxAliveCount: 0
+    PrewarmCount: 1
+    MaxAliveCount: 1
   <SpawnIntervalSeconds>k__BackingField: 2
+  <SpawnCenter>k__BackingField: {x: 0, y: 0, z: 0}
+  <SpawnRange>k__BackingField: {x: 3, y: 3}
+  <SpawnGroundY>k__BackingField: 0
