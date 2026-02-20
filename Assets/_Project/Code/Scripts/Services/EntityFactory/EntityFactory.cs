@@ -10,6 +10,7 @@ namespace Project.Services
         public IEntity Create(EntityArchetypeConfig archetype)
         {
             var entity = Object.Instantiate(archetype.Prefab);
+            entity.SetViewportExitTurn(archetype.ViewportExitTurnBackAngle, archetype.ViewportExitTurnRandomDelta);
             AttachMovementComponent(entity, archetype);
             return entity;
         }

@@ -14,6 +14,9 @@ namespace Project.Entities
         private readonly List<IEntityFixedTickableComponent> _fixedTickableComponents = new();
         private readonly List<IEntityCollisionComponent> _collisionComponents = new();
 
+        private float _turnBackAngle = 180f;
+        private float _turnRandomDelta = 20f;
+
         [field: SerializeField] public Rigidbody Rigidbody { get; private set; }
         public event Action<IEntity> Deactivated;
         public event Action<IEntity> Destroyed;
@@ -42,6 +45,12 @@ namespace Project.Entities
         public void SetBodyRotation(Quaternion rotation)
         {
             _bodyTransform.rotation = rotation;
+        }
+
+        public void SetViewportExitTurn(float turnBackAngle, float turnRandomDelta)
+        {
+            _turnBackAngle = turnBackAngle;
+            _turnRandomDelta = turnRandomDelta;
         }
 
         public void AddComponent(IEntityRuntimeComponent component)
@@ -81,7 +90,11 @@ namespace Project.Entities
 
         public void CameraViewportExit()
         {
-            Debug.Log($"{gameObject.name} Switch way point");
+            var currentYaw = _bodyTransform.eulerAngles.y;
+            var randomDelta = UnityEngine.Random.Range(-_turnRandomDelta, _turnRandomDelta);
+            var targetYaw = currentYaw + _turnBackAngle + randomDelta;
+
+            _bodyTransform.rotation = Quaternion.Euler(0f, targetYaw, 0f);
         }
 
         public Vector3 GetMoveDirection()

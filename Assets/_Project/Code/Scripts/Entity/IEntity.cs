@@ -12,6 +12,7 @@ namespace Project.Entities
         void SetVisible(bool isVisible);
         void SetPosition(Vector3 position);
         void SetBodyRotation(Quaternion rotation);
+        void SetViewportExitTurn(float turnBackAngle, float turnRandomDelta);
         void AddComponent(IEntityRuntimeComponent component);
         void TickComponents();
         void FixedTickComponents();

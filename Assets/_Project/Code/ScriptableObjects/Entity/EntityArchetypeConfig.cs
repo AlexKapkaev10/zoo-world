@@ -3,13 +3,6 @@ using UnityEngine;
 
 namespace Project.ScriptableObjects
 {
-    public enum EntityKind
-    {
-        Hunter = 0,
-        Frog = 1,
-        Snake = 2
-    }
-
     [CreateAssetMenu(fileName = nameof(EntityArchetypeConfig), menuName = "Config/Entity/Archetype")]
     public sealed class EntityArchetypeConfig : ScriptableObject
     {
@@ -17,5 +10,7 @@ namespace Project.ScriptableObjects
         [field: SerializeField] public Entity Prefab { get; private set; }
         [field: SerializeField] public LinearMovementConfig LinearMovement { get; private set; }
         [field: SerializeField] public JumpMovementConfig JumpMovement { get; private set; }
+        [field: SerializeField] public float ViewportExitTurnBackAngle { get; private set; } = 180f;
+        [field: SerializeField] public float ViewportExitTurnRandomDelta { get; private set; } = 20f;
     }
 }
