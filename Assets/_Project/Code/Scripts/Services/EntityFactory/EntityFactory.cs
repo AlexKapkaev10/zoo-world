@@ -1,4 +1,5 @@
 using Project.Entities;
+using Project.Entities.Components;
 using Project.Entities.Components.Movement;
 using Project.ScriptableObjects;
 using Object = UnityEngine.Object;
@@ -7,11 +8,18 @@ namespace Project.Services
 {
     public sealed class EntityFactory : IEntityFactory
     {
+        private int counter = 0;
+        
         public IEntity Create(EntityArchetypeConfig archetype)
         {
-            var entity = Object.Instantiate(archetype.Prefab);
+            IEntity entity = Object.Instantiate(archetype.Prefab);
+            entity.SetId(counter);
+            entity.SetKind(archetype.Kind);
             entity.SetViewportExitTurn(archetype.ViewportExitTurnBackAngle, archetype.ViewportExitTurnRandomDelta);
             AttachMovementComponent(entity, archetype);
+            AttachCollisionComponent(entity, archetype);
+
+            counter++;
             return entity;
         }
 
@@ -29,6 +37,17 @@ namespace Project.Services
                     entity.AddComponent(new LinearMovementComponent(archetype.LinearMovement));
                     break;
             }
+        }
+
+        private static void AttachCollisionComponent(IEntity entity, EntityArchetypeConfig archetype)
+        {
+            if (archetype.Kind == EntityKind.Hunter)
+            {
+                entity.AddComponent(new HunterCollisionComponent());
+                return;
+            }
+
+            entity.AddComponent(new AnimalBounceCollisionComponent());
         }
     }
 }

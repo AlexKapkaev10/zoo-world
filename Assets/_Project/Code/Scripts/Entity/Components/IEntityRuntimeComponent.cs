@@ -21,7 +21,5 @@ namespace Project.Entities.Components
     public interface IEntityCollisionComponent : IEntityRuntimeComponent
     {
         void OnCollisionEnter(Collision collision);
-        void OnCollisionStay(Collision collision);
-        void OnCollisionExit(Collision collision);
     }
 }

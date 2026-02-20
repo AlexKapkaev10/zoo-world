@@ -8,8 +8,11 @@ namespace Project.Entities
     {
         event Action<IEntity> Deactivated;
         event Action<IEntity> Destroyed;
+        EntityKind Kind { get; }
         Rigidbody Rigidbody { get; }
+        void SetId(int id);
         void SetVisible(bool isVisible);
+        void SetKind(EntityKind kind);
         void SetPosition(Vector3 position);
         void SetBodyRotation(Quaternion rotation);
         void SetViewportExitTurn(float turnBackAngle, float turnRandomDelta);
@@ -17,6 +20,7 @@ namespace Project.Entities
         void TickComponents();
         void FixedTickComponents();
         void CameraViewportExit();
+        int GetId();
         Vector3 GetVelocity();
         Vector3 GetPosition();
         Vector3 GetMoveDirection();

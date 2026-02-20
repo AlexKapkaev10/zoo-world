@@ -16,11 +16,18 @@ namespace Project.Entities
 
         private float _turnBackAngle = 180f;
         private float _turnRandomDelta = 20f;
+        private int _id;
 
+        public EntityKind Kind { get; private set; }
         [field: SerializeField] public Rigidbody Rigidbody { get; private set; }
         public event Action<IEntity> Deactivated;
         public event Action<IEntity> Destroyed;
         public Transform Transform => transform;
+
+        public int GetId()
+        {
+            return _id;
+        }
 
         public Vector3 GetVelocity()
         {
@@ -32,9 +39,19 @@ namespace Project.Entities
             return transform.position;
         }
 
+        public void SetId(int id)
+        {
+            _id = id;
+        }
+
         public void SetVisible(bool isVisible)
         {
             gameObject.SetActive(isVisible);
+        }
+
+        public void SetKind(EntityKind kind)
+        {
+            Kind = kind;
         }
 
         public void SetPosition(Vector3 position)
@@ -107,22 +124,6 @@ namespace Project.Entities
             foreach (var collisionComponent in _collisionComponents)
             {
                 collisionComponent.OnCollisionEnter(collision);
-            }
-        }
-
-        private void OnCollisionStay(Collision collision)
-        {
-            foreach (var collisionComponent in _collisionComponents)
-            {
-                collisionComponent.OnCollisionStay(collision);
-            }
-        }
-
-        private void OnCollisionExit(Collision collision)
-        {
-            foreach (var collisionComponent in _collisionComponents)
-            {
-                collisionComponent.OnCollisionExit(collision);
             }
         }
 
