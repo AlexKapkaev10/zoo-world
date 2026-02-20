@@ -6,7 +6,7 @@ using VContainer;
 
 namespace Project.Services
 {
-    public class CameraService : ICameraService
+    public sealed class CameraService : ICameraService
     {
         private readonly CameraServiceConfig _config;
         

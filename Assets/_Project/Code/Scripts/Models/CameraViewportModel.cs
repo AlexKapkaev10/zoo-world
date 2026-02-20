@@ -8,7 +8,9 @@ namespace Project.Models
     public sealed class CameraViewportModel
     {
         private readonly Dictionary<IEntity, ViewportObservedState> _observedEntityMap = new();
+        private readonly List<IEntity> _pendingRemove = new();
         private readonly Camera _camera;
+        private bool _isTicking;
 
         private const float Margin = 0.02f;
 
@@ -32,13 +34,22 @@ namespace Project.Models
 
         public void Tick()
         {
+            _isTicking = true;
             CheckExit();
+            _isTicking = false;
+            FlushPendingRemove();
         }
 
         public void RemoveViewportObserved(IEntity entity)
         {
             if (entity == null)
             {
+                return;
+            }
+
+            if (_isTicking)
+            {
+                _pendingRemove.Add(entity);
                 return;
             }
 
@@ -91,6 +102,21 @@ namespace Project.Models
                    viewportPoint.x <= 1f + margin &&
                    viewportPoint.y >= -margin &&
                    viewportPoint.y <= 1f + margin;
+        }
+
+        private void FlushPendingRemove()
+        {
+            if (_pendingRemove.Count == 0)
+            {
+                return;
+            }
+
+            for (int i = 0; i < _pendingRemove.Count; i++)
+            {
+                _observedEntityMap.Remove(_pendingRemove[i]);
+            }
+
+            _pendingRemove.Clear();
         }
     }
 }

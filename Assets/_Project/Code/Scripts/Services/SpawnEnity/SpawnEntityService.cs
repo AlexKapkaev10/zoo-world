@@ -6,32 +6,49 @@ using Project.Entities;
 using Project.ScriptableObjects;
 using VContainer;
 using VContainer.Unity;
-using Object = UnityEngine.Object;
 
 namespace Project.Services
 {
-    public interface ISpawnEntityService : IStartable, IDisposable
+    public interface ISpawnEntityService : IStartable, ITickable, IFixedTickable, IDisposable
     {
         
     }
     
     public sealed class SpawnEntityService : ISpawnEntityService
     {
-        private readonly List<IEntity> _entities = new ();
+        private readonly List<IEntity> _entities = new();
         private readonly ICameraService _cameraService;
+        private readonly IEntityFactory _entityFactory;
         private readonly SpawnEntityServiceConfig _config;
-        private readonly CancellationTokenSource _spawnCts = new ();
+        private readonly CancellationTokenSource _spawnCts = new();
         
         [Inject]
-        public SpawnEntityService(ICameraService cameraService, SpawnEntityServiceConfig config)
+        public SpawnEntityService(ICameraService cameraService, IEntityFactory entityFactory, SpawnEntityServiceConfig config)
         {
             _config = config;
             _cameraService = cameraService;
+            _entityFactory = entityFactory;
         }
         
         public void Start()
         {
             SpawnAsync(_spawnCts.Token).Forget();
+        }
+
+        public void Tick()
+        {
+            for (int i = 0; i < _entities.Count; i++)
+            {
+                _entities[i].TickComponents();
+            }
+        }
+
+        public void FixedTick()
+        {
+            for (int i = 0; i < _entities.Count; i++)
+            {
+                _entities[i].FixedTickComponents();
+            }
         }
 
         public void Dispose()
@@ -45,9 +62,14 @@ namespace Project.Services
             }
         }
 
-        private void SpawnEntity(Entity prefab)
+        private void SpawnEntity(EntityArchetypeConfig archetype)
         {
-            var entity = Object.Instantiate(prefab);
+            IEntity entity = _entityFactory.Create(archetype);
+            if (entity == null)
+            {
+                return;
+            }
+
             entity.Destroyed += OnEntityDestroy;
             
             _entities.Add(entity);
@@ -62,17 +84,27 @@ namespace Project.Services
             _entities.Remove(entity);
         }
 
-        private Entity GetEntity()
+        private EntityArchetypeConfig GetEntityArchetype()
         {
-            return _config.EntityPrefab;
+            if (_config.Archetypes == null || _config.Archetypes.Count == 0)
+            {
+                return null;
+            }
+
+            int randomIndex = UnityEngine.Random.Range(0, _config.Archetypes.Count);
+            return _config.Archetypes[randomIndex];
         }
         
         private async UniTaskVoid SpawnAsync(CancellationToken token)
         {
             while (!token.IsCancellationRequested)
             {
-                SpawnEntity(GetEntity());
-                await UniTask.Delay(TimeSpan.FromSeconds(_config.SpawnRange), cancellationToken: token);
+                if (_entities.Count < _config.MaxSpawnCount)
+                {
+                    SpawnEntity(GetEntityArchetype());
+                }
+
+                await UniTask.Delay(TimeSpan.FromSeconds(_config.SpawnIntervalSeconds), cancellationToken: token);
             }
         }
     }

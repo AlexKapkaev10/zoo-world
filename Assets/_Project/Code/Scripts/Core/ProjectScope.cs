@@ -2,7 +2,7 @@ using VContainer.Unity;
 
 namespace Project.Core
 {
-    public class ProjectScope : LifetimeScope
+    public sealed class ProjectScope : LifetimeScope
     {
         
     }

@@ -6,7 +6,7 @@ using VContainer.Unity;
 
 namespace Project.Core
 {
-    public class GameScope : LifetimeScope
+    public sealed class GameScope : LifetimeScope
     {
         [SerializeField] private SpawnEntityServiceConfig _spawnEntityServiceConfig;
         [SerializeField] private CameraServiceConfig _cameraServiceConfig;
@@ -18,6 +18,9 @@ namespace Project.Core
 
         private void RegisterServices(IContainerBuilder builder)
         {
+            builder.Register<EntityFactory>(Lifetime.Scoped)
+                .As<IEntityFactory>();
+
             builder.Register<CameraService>(Lifetime.Scoped)
                 .As<ICameraService>()
                 .As<IInitializable>()
@@ -27,6 +30,8 @@ namespace Project.Core
             builder.Register<SpawnEntityService>(Lifetime.Scoped)
                 .As<ISpawnEntityService>()
                 .As<IStartable>()
+                .As<ITickable>()
+                .As<IFixedTickable>()
                 .WithParameter(_spawnEntityServiceConfig);
         }
     }
