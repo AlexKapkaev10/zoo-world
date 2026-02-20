@@ -1,7 +1,7 @@
 using Project.Entities;
 using Project.Entities.Components.Movement;
 using Project.ScriptableObjects;
-using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Project.Services
 {
@@ -9,11 +9,6 @@ namespace Project.Services
     {
         public IEntity Create(EntityArchetypeConfig archetype)
         {
-            if (archetype == null || archetype.Prefab == null)
-            {
-                return null;
-            }
-
             var entity = Object.Instantiate(archetype.Prefab);
             AttachMovementComponent(entity, archetype);
             return entity;
@@ -21,21 +16,16 @@ namespace Project.Services
 
         private static void AttachMovementComponent(IEntity entity, EntityArchetypeConfig archetype)
         {
-            if (entity == null)
-            {
-                return;
-            }
-
             switch (archetype.Kind)
             {
                 case EntityKind.Frog:
-                    entity.AddRuntimeComponent(new JumpMovementComponent(archetype.JumpMovement));
+                    entity.AddComponent(new JumpMovementComponent(archetype.JumpMovement));
                     break;
 
                 case EntityKind.Hunter:
                 case EntityKind.Snake:
                 default:
-                    entity.AddRuntimeComponent(new LinearMovementComponent(archetype.LinearMovement));
+                    entity.AddComponent(new LinearMovementComponent(archetype.LinearMovement));
                     break;
             }
         }

@@ -4,7 +4,7 @@ using Project.ScriptableObjects;
 using UnityEngine;
 using VContainer;
 
-namespace Project.Services
+namespace Project.Services.CameraService
 {
     public sealed class CameraService : ICameraService
     {

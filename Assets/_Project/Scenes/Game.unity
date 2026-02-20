@@ -517,8 +517,8 @@ GameObject:
   - component: {fileID: 1015845003}
   - component: {fileID: 1015845002}
   - component: {fileID: 1015845001}
-  m_Layer: 0
-  m_Name: Floor
+  m_Layer: 7
+  m_Name: Ground
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -1,7 +1,7 @@
 using Project.Entities;
 using VContainer.Unity;
 
-namespace Project.Services
+namespace Project.Services.CameraService
 {
     public interface ICameraService : IInitializable, ITickable
     {

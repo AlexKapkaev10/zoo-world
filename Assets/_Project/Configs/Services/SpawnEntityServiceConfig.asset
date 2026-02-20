@@ -12,9 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac767469c6bf48bb92170077a871feb2, type: 3}
   m_Name: SpawnEntityServiceConfig
   m_EditorClassIdentifier: 
-  <Archetypes>k__BackingField:
-  - {fileID: 11400000, guid: 83548b2ef20db4d4a94e94be7c379d53, type: 2}
-  - {fileID: 11400000, guid: edd048d013ccd414ca6ff1d89de109d4, type: 2}
-  - {fileID: 11400000, guid: 2751f6e23409e774ba7deb5341f459f4, type: 2}
+  <SpawnData>k__BackingField:
+  - Archetype: {fileID: 11400000, guid: edd048d013ccd414ca6ff1d89de109d4, type: 2}
+    PrewarmCount: 0
+    MaxAliveCount: 0
+  - Archetype: {fileID: 11400000, guid: 83548b2ef20db4d4a94e94be7c379d53, type: 2}
+    PrewarmCount: 10
+    MaxAliveCount: 20
+  - Archetype: {fileID: 11400000, guid: 2751f6e23409e774ba7deb5341f459f4, type: 2}
+    PrewarmCount: 0
+    MaxAliveCount: 0
   <SpawnIntervalSeconds>k__BackingField: 2
-  <MaxSpawnCount>k__BackingField: 20

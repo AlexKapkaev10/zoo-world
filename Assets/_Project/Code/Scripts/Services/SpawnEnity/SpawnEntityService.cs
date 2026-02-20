@@ -4,10 +4,11 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using Project.Entities;
 using Project.ScriptableObjects;
+using Project.Services.CameraService;
 using VContainer;
 using VContainer.Unity;
 
-namespace Project.Services
+namespace Project.Services.SpawnEntity
 {
     public interface ISpawnEntityService : IStartable, ITickable, IFixedTickable, IDisposable
     {
@@ -21,6 +22,10 @@ namespace Project.Services
         private readonly IEntityFactory _entityFactory;
         private readonly SpawnEntityServiceConfig _config;
         private readonly CancellationTokenSource _spawnCts = new();
+        private readonly Dictionary<IEntity, SpawnArchetypeData> _ruleByEntity = new();
+        private readonly Dictionary<EntityKind, int> _aliveByKind = new();
+
+        private EntityPool _pool;
         
         [Inject]
         public SpawnEntityService(ICameraService cameraService, IEntityFactory entityFactory, SpawnEntityServiceConfig config)
@@ -32,22 +37,24 @@ namespace Project.Services
         
         public void Start()
         {
+            _pool = new EntityPool(_entityFactory);
+            _pool.Prewarm(_config.SpawnData);
             SpawnAsync(_spawnCts.Token).Forget();
         }
 
         public void Tick()
         {
-            for (int i = 0; i < _entities.Count; i++)
+            foreach (var entity in _entities)
             {
-                _entities[i].TickComponents();
+                entity.TickComponents();
             }
         }
 
         public void FixedTick()
         {
-            for (int i = 0; i < _entities.Count; i++)
+            foreach (var entity in _entities)
             {
-                _entities[i].FixedTickComponents();
+                entity.FixedTickComponents();
             }
         }
 
@@ -55,53 +62,110 @@ namespace Project.Services
         {
             _spawnCts?.Cancel();
             _spawnCts?.Dispose();
-            
-            foreach (var entity in _entities)
+
+            for (int i = _entities.Count - 1; i >= 0; i--)
             {
-                entity.Destroyed -= OnEntityDestroy;
+                DespawnEntity(_entities[i], releaseToPool: true);
             }
         }
 
-        private void SpawnEntity(EntityArchetypeConfig archetype)
+        private void SpawnEntity(SpawnArchetypeData spawnData)
         {
-            IEntity entity = _entityFactory.Create(archetype);
-            if (entity == null)
+            var entity = _pool.Get(spawnData.Archetype);
+
+            entity.Deactivated += OnEntityDeactivated;
+            entity.Destroyed += OnEntityDestroy;
+            
+            _entities.Add(entity);
+            _ruleByEntity[entity] = spawnData;
+            IncrementAlive(spawnData.Archetype.Kind);
+            _cameraService.AddViewportObserved(entity);
+        }
+
+        private void DespawnEntity(IEntity entity, bool releaseToPool)
+        {
+            if (!_ruleByEntity.Remove(entity, out var spawnArchetypeData))
             {
                 return;
             }
 
-            entity.Destroyed += OnEntityDestroy;
-            
-            _entities.Add(entity);
-            _cameraService.AddViewportObserved(entity);
+            _entities.Remove(entity);
+            DecrementAlive(spawnArchetypeData.Archetype.Kind);
+
+            entity.Deactivated -= OnEntityDeactivated;
+            entity.Destroyed -= OnEntityDestroy;
+            _cameraService.RemoveViewportObserved(entity);
+
+            if (releaseToPool && _pool != null)
+            {
+                _pool.Release(entity);
+            }
         }
 
         private void OnEntityDestroy(IEntity entity)
         {
-            entity.Destroyed -= OnEntityDestroy;
-            
-            _cameraService.RemoveViewportObserved(entity);
-            _entities.Remove(entity);
+            DespawnEntity(entity, releaseToPool: false);
         }
 
-        private EntityArchetypeConfig GetEntityArchetype()
+        private void OnEntityDeactivated(IEntity entity)
         {
-            if (_config.Archetypes == null || _config.Archetypes.Count == 0)
+            DespawnEntity(entity, releaseToPool: true);
+        }
+
+        private SpawnArchetypeData GetSpawnRule()
+        {
+            List<SpawnArchetypeData> availableRules = new();
+            
+            foreach (var data in _config.SpawnData)
+            {
+                int aliveForKind = _aliveByKind.GetValueOrDefault(data.Archetype.Kind, 0);
+                if (aliveForKind >= data.MaxAliveCount)
+                {
+                    continue;
+                }
+
+                availableRules.Add(data);
+            }
+
+            if (availableRules.Count == 0)
             {
                 return null;
             }
 
-            int randomIndex = UnityEngine.Random.Range(0, _config.Archetypes.Count);
-            return _config.Archetypes[randomIndex];
+            int randomIndex = UnityEngine.Random.Range(0, availableRules.Count);
+            return availableRules[randomIndex];
+        }
+
+        private void IncrementAlive(EntityKind kind)
+        {
+            _aliveByKind[kind] = _aliveByKind.TryGetValue(kind, out int current) ? current + 1 : 1;
+        }
+
+        private void DecrementAlive(EntityKind kind)
+        {
+            if (!_aliveByKind.TryGetValue(kind, out int current))
+            {
+                return;
+            }
+
+            current--;
+            if (current <= 0)
+            {
+                _aliveByKind.Remove(kind);
+                return;
+            }
+
+            _aliveByKind[kind] = current;
         }
         
         private async UniTaskVoid SpawnAsync(CancellationToken token)
         {
             while (!token.IsCancellationRequested)
             {
-                if (_entities.Count < _config.MaxSpawnCount)
+                SpawnArchetypeData spawnData = GetSpawnRule();
+                if (spawnData != null)
                 {
-                    SpawnEntity(GetEntityArchetype());
+                    SpawnEntity(spawnData);
                 }
 
                 await UniTask.Delay(TimeSpan.FromSeconds(_config.SpawnIntervalSeconds), cancellationToken: token);

@@ -7,35 +7,51 @@ namespace Project.Entities
 {
     public interface IEntity
     {
+        event Action<IEntity> Deactivated;
         event Action<IEntity> Destroyed;
-        Transform Transform { get; }
         Rigidbody Rigidbody { get; }
-        void AddRuntimeComponent(IEntityRuntimeComponent component);
+        void SetVisible(bool isVisible);
+        void AddComponent(IEntityRuntimeComponent component);
         void TickComponents();
         void FixedTickComponents();
         void CameraViewportExit();
+        Vector3 GetVelocity();
+        Vector3 GetPosition();
+        Vector3 GetMoveDirection();
     }
     
     public sealed class Entity : MonoBehaviour, IEntity
     {
         [SerializeField] private Rigidbody _rigidbody;
+        [SerializeField] private Transform _bodyTransform;
 
         private readonly List<IEntityRuntimeComponent> _components = new();
         private readonly List<IEntityTickableComponent> _tickableComponents = new();
         private readonly List<IEntityFixedTickableComponent> _fixedTickableComponents = new();
         private readonly List<IEntityCollisionComponent> _collisionComponents = new();
 
+        public event Action<IEntity> Deactivated;
         public event Action<IEntity> Destroyed;
         public Transform Transform => transform;
         public Rigidbody Rigidbody => _rigidbody;
 
-        public void AddRuntimeComponent(IEntityRuntimeComponent component)
+        public Vector3 GetVelocity()
         {
-            if (component == null)
-            {
-                return;
-            }
+            return _rigidbody.linearVelocity;
+        }
 
+        public Vector3 GetPosition()
+        {
+            return transform.position;
+        }
+
+        public void SetVisible(bool isVisible)
+        {
+            gameObject.SetActive(isVisible);
+        }
+
+        public void AddComponent(IEntityRuntimeComponent component)
+        {
             component.Initialize(this);
             _components.Add(component);
 
@@ -57,54 +73,59 @@ namespace Project.Entities
 
         public void TickComponents()
         {
-            for (int i = 0; i < _tickableComponents.Count; i++)
+            foreach (var tickableComponent in _tickableComponents)
             {
-                _tickableComponents[i].Tick();
+                tickableComponent.Tick();
             }
         }
 
         public void FixedTickComponents()
         {
-            for (int i = 0; i < _fixedTickableComponents.Count; i++)
+            foreach (var fixedTickableComponent in _fixedTickableComponents)
             {
-                _fixedTickableComponents[i].FixedTick();
+                fixedTickableComponent.FixedTick();
             }
         }
-        
+
         public void CameraViewportExit()
         {
             Debug.Log($"{gameObject.name} Switch way point");
         }
 
+        public Vector3 GetMoveDirection()
+        {
+            return _bodyTransform.forward;
+        }
+
         private void OnCollisionEnter(Collision collision)
         {
-            for (int i = 0; i < _collisionComponents.Count; i++)
+            foreach (var collisionComponent in _collisionComponents)
             {
-                _collisionComponents[i].OnCollisionEnter(collision);
+                collisionComponent.OnCollisionEnter(collision);
             }
         }
 
         private void OnCollisionStay(Collision collision)
         {
-            for (int i = 0; i < _collisionComponents.Count; i++)
+            foreach (var collisionComponent in _collisionComponents)
             {
-                _collisionComponents[i].OnCollisionStay(collision);
+                collisionComponent.OnCollisionStay(collision);
             }
         }
 
         private void OnCollisionExit(Collision collision)
         {
-            for (int i = 0; i < _collisionComponents.Count; i++)
+            foreach (var collisionComponent in _collisionComponents)
             {
-                _collisionComponents[i].OnCollisionExit(collision);
+                collisionComponent.OnCollisionExit(collision);
             }
         }
 
         private void OnDestroy()
         {
-            for (int i = 0; i < _components.Count; i++)
+            foreach (var component in _components)
             {
-                _components[i].Dispose();
+                component.Dispose();
             }
 
             _components.Clear();
@@ -113,6 +134,11 @@ namespace Project.Entities
             _collisionComponents.Clear();
 
             Destroyed?.Invoke(this);
+        }
+
+        private void OnDisable()
+        {
+            Deactivated?.Invoke(this);
         }
     }
 }

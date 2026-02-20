@@ -6,6 +6,5 @@ namespace Project.ScriptableObjects
     public sealed class LinearMovementConfig : ScriptableObject
     {
         [field: SerializeField, Min(0f)] public float Speed { get; private set; } = 3f;
-        [field: SerializeField] public Vector3 Direction { get; private set; } = Vector3.forward;
     }
 }

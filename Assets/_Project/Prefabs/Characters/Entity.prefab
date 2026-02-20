@@ -69,6 +69,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _rigidbody: {fileID: -2557629108660935475}
+  _bodyTransform: {fileID: 2170978211464900907}
 --- !u!54 &-2557629108660935475
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -94,7 +95,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 80
+  m_Constraints: 112
   m_CollisionDetection: 0
 --- !u!1 &6836010197342911266
 GameObject:
@@ -106,7 +107,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2170978211464900907}
   m_Layer: 0
-  m_Name: View
+  m_Name: Body
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
