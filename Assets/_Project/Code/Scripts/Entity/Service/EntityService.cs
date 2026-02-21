@@ -80,9 +80,7 @@ namespace Project.Entities
         private void SpawnEntity(SpawnArchetypeData spawnData, Vector3 spawnPosition, Quaternion bodyRotation)
         {
             var entity = _pool.Get(spawnData.Archetype);
-            entity.SetPosition(spawnPosition);
-            entity.SetBodyRotation(bodyRotation);
-            entity.PlaySpawnAnimation();
+            entity.Spawn(spawnPosition, bodyRotation);
 
             entity.Deactivated += OnEntityDeactivated;
             entity.Destroyed += OnEntityDestroy;

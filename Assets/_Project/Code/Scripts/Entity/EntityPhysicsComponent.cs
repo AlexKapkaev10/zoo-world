@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Project.Entities
@@ -6,30 +5,29 @@ namespace Project.Entities
     public sealed class EntityPhysicsComponent : MonoBehaviour
     {
         [SerializeField] private Rigidbody _rigidbody;
+        [SerializeField] private Collider _rootCollider;
 
-        private readonly List<Collider> _colliders = new();
         private bool _initialIsKinematic;
 
-        public void InitializePhysics()
+        public void Initialize()
         {
             _initialIsKinematic = _rigidbody.isKinematic;
-            GetComponentsInChildren(true, _colliders);
         }
 
-        public void ApplyBounce(Vector3 direction, float forceValue)
+        public void AddBounceImpulse(Vector3 direction, float forceValue)
         {
             _rigidbody.AddForce(direction * forceValue, ForceMode.Impulse);
         }
 
-        public void FreezeForDeath()
+        public void PrepareForDeath()
         {
             _rigidbody.linearVelocity = Vector3.zero;
             _rigidbody.angularVelocity = Vector3.zero;
             _rigidbody.isKinematic = true;
-            SetCollidersEnabled(false);
+            _rootCollider.enabled = false;
         }
 
-        public void RestoreForSpawn()
+        public void PrepareForSpawn()
         {
             _rigidbody.isKinematic = _initialIsKinematic;
             if (!_rigidbody.isKinematic)
@@ -38,20 +36,12 @@ namespace Project.Entities
                 _rigidbody.angularVelocity = Vector3.zero;
             }
 
-            SetCollidersEnabled(true);
+            _rootCollider.enabled = true;
         }
 
         public Rigidbody GetRigidbody()
         {
             return _rigidbody;
-        }
-
-        private void SetCollidersEnabled(bool isEnabled)
-        {
-            foreach (var collider in _colliders)
-            {
-                collider.enabled = isEnabled;
-            }
         }
     }
 }

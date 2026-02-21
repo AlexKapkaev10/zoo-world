@@ -12,21 +12,20 @@ namespace Project.Entities
     public sealed class Entity : MonoBehaviour, IEntity
     {
         [SerializeField] private Transform _bodyTransform;
-        [SerializeField] private Rigidbody _rigidbody;
         [SerializeField] private Transform _worldViewParent;
         [SerializeField] private ScaleAnimatorComponent _animatorComponent;
+        [SerializeField] private EntityPhysicsComponent _physicsComponent;
         
         private IPublisher<EatPreyMessage> _eatPreyPublisher;
-        private readonly List<Collider> _colliders = new();
-        private bool _rigidbodyInitialIsKinematic;
-
-        #region Components
+        private bool _isDying;
         
+        #region RuntimeComponents
+
         private readonly List<IEntityRuntimeComponent> _components = new();
         private readonly List<IEntityTickableComponent> _tickableComponents = new();
         private readonly List<IEntityFixedTickableComponent> _fixedTickableComponents = new();
         private readonly List<IEntityCollisionComponent> _collisionComponents = new();
-        
+
         #endregion
 
         #region Properties
@@ -35,7 +34,6 @@ namespace Project.Entities
         public event Action<IEntity> Destroyed;
         public ArchetypeData Data { get; private set; }
         public int ID { get; private set; }
-        public bool IsDying { get; private set; }
 
         #endregion
 
@@ -43,13 +41,12 @@ namespace Project.Entities
 
         private void Awake()
         {
-            _rigidbodyInitialIsKinematic = _rigidbody.isKinematic;
-            GetComponentsInChildren(true, _colliders);
+            _physicsComponent.Initialize();
         }
 
         private void OnCollisionEnter(Collision collision)
         {
-            if (IsDying)
+            if (_isDying)
             {
                 return;
             }
@@ -91,38 +88,43 @@ namespace Project.Entities
 
         public void SetBounce(Vector3 direction)
         {
-            if (IsDying)
+            if (_isDying)
             {
                 return;
             }
 
             SetBodyRotation(Quaternion.LookRotation(direction, Vector3.up));
-            _rigidbody.AddForce(direction * Data.CollisionBounceValue, ForceMode.Impulse);
+            _physicsComponent.AddBounceImpulse(direction, Data.CollisionBounceValue);
+        }
+
+        public void Spawn(Vector3 spawnPosition, Quaternion bodyRotation)
+        {
+            SetPosition(spawnPosition);
+            SetBodyRotation(bodyRotation);
+            PlaySpawnAnimation();
         }
 
         public void PrepareForSpawn()
         {
-            IsDying = false;
-            RestoreRigidbodyState();
-            SetCollidersEnabled(true);
+            _isDying = false;
+            _physicsComponent.PrepareForSpawn();
             _animatorComponent.ResetVisual();
         }
 
-        public void PlaySpawnAnimation()
+        private void PlaySpawnAnimation()
         {
             _animatorComponent.PlaySpawn();
         }
 
         public void BeginDeath()
         {
-            if (IsDying)
+            if (_isDying)
             {
                 return;
             }
 
-            IsDying = true;
-            SetCollidersEnabled(false);
-            FreezeRigidbody();
+            _isDying = true;
+            _physicsComponent.PrepareForDeath();
             _animatorComponent.PlayDeath(FinalizeDeath);
         }
 
@@ -131,12 +133,12 @@ namespace Project.Entities
             gameObject.SetActive(isVisible);
         }
 
-        public void SetPosition(Vector3 position)
+        private void SetPosition(Vector3 position)
         {
             transform.position = position;
         }
 
-        public void SetBodyRotation(Quaternion rotation)
+        private void SetBodyRotation(Quaternion rotation)
         {
             _bodyTransform.rotation = rotation;
         }
@@ -167,7 +169,7 @@ namespace Project.Entities
 
         public void TickComponents()
         {
-            if (IsDying)
+            if (_isDying)
             {
                 return;
             }
@@ -180,7 +182,7 @@ namespace Project.Entities
 
         public void FixedTickComponents()
         {
-            if (IsDying)
+            if (_isDying)
             {
                 return;
             }
@@ -193,7 +195,7 @@ namespace Project.Entities
 
         public void CameraViewportExit()
         {
-            if (IsDying)
+            if (_isDying)
             {
                 return;
             }
@@ -218,7 +220,7 @@ namespace Project.Entities
 
         public Rigidbody GetRigidbody()
         {
-            return _rigidbody;
+            return _physicsComponent.GetRigidbody();
         }
 
         public Vector3 GetPosition()
@@ -229,32 +231,6 @@ namespace Project.Entities
         public Vector3 GetMoveDirection()
         {
             return _bodyTransform.forward;
-        }
-
-        private void FreezeRigidbody()
-        {
-            _rigidbody.linearVelocity = Vector3.zero;
-            _rigidbody.angularVelocity = Vector3.zero;
-            _rigidbody.isKinematic = true;
-        }
-
-        private void RestoreRigidbodyState()
-        {
-            _rigidbody.isKinematic = _rigidbodyInitialIsKinematic;
-            
-            if (!_rigidbody.isKinematic)
-            {
-                _rigidbody.linearVelocity = Vector3.zero;
-                _rigidbody.angularVelocity = Vector3.zero;
-            }
-        }
-
-        private void SetCollidersEnabled(bool isEnabled)
-        {
-            foreach (var collider in _colliders)
-            {
-                collider.enabled = isEnabled;
-            }
         }
 
         private void FinalizeDeath()
