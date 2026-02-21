@@ -12,18 +12,20 @@ namespace Project.Entities
     public sealed class Entity : MonoBehaviour, IEntity
     {
         [SerializeField] private Transform _bodyTransform;
-        [SerializeField] private Rigidbody _rigidbody;
         [SerializeField] private Transform _worldViewParent;
+        [SerializeField] private ScaleAnimatorComponent _animatorComponent;
+        [SerializeField] private EntityPhysicsComponent _physicsComponent;
         
         private IPublisher<EatPreyMessage> _eatPreyPublisher;
-
-        #region Components
+        private bool _isDying;
         
+        #region RuntimeComponents
+
         private readonly List<IEntityRuntimeComponent> _components = new();
         private readonly List<IEntityTickableComponent> _tickableComponents = new();
         private readonly List<IEntityFixedTickableComponent> _fixedTickableComponents = new();
         private readonly List<IEntityCollisionComponent> _collisionComponents = new();
-        
+
         #endregion
 
         #region Properties
@@ -37,8 +39,18 @@ namespace Project.Entities
 
         #region UnityEvents
 
+        private void Awake()
+        {
+            _physicsComponent.Initialize();
+        }
+
         private void OnCollisionEnter(Collision collision)
         {
+            if (_isDying)
+            {
+                return;
+            }
+
             foreach (var collisionComponent in _collisionComponents)
             {
                 collisionComponent.OnCollisionEnter(collision);
@@ -76,8 +88,44 @@ namespace Project.Entities
 
         public void SetBounce(Vector3 direction)
         {
+            if (_isDying)
+            {
+                return;
+            }
+
             SetBodyRotation(Quaternion.LookRotation(direction, Vector3.up));
-            _rigidbody.AddForce(direction * Data.CollisionBounceValue, ForceMode.Impulse);
+            _physicsComponent.AddBounceImpulse(direction, Data.CollisionBounceValue);
+        }
+
+        public void Spawn(Vector3 spawnPosition, Quaternion bodyRotation)
+        {
+            SetPosition(spawnPosition);
+            SetBodyRotation(bodyRotation);
+            PlaySpawnAnimation();
+        }
+
+        public void PrepareForSpawn()
+        {
+            _isDying = false;
+            _physicsComponent.PrepareForSpawn();
+            _animatorComponent.ResetVisual();
+        }
+
+        private void PlaySpawnAnimation()
+        {
+            _animatorComponent.PlaySpawn();
+        }
+
+        public void BeginDeath()
+        {
+            if (_isDying)
+            {
+                return;
+            }
+
+            _isDying = true;
+            _physicsComponent.PrepareForDeath();
+            _animatorComponent.PlayDeath(FinalizeDeath);
         }
 
         public void SetVisible(bool isVisible)
@@ -85,12 +133,12 @@ namespace Project.Entities
             gameObject.SetActive(isVisible);
         }
 
-        public void SetPosition(Vector3 position)
+        private void SetPosition(Vector3 position)
         {
             transform.position = position;
         }
 
-        public void SetBodyRotation(Quaternion rotation)
+        private void SetBodyRotation(Quaternion rotation)
         {
             _bodyTransform.rotation = rotation;
         }
@@ -121,6 +169,11 @@ namespace Project.Entities
 
         public void TickComponents()
         {
+            if (_isDying)
+            {
+                return;
+            }
+
             foreach (var tickableComponent in _tickableComponents)
             {
                 tickableComponent.Tick();
@@ -129,6 +182,11 @@ namespace Project.Entities
 
         public void FixedTickComponents()
         {
+            if (_isDying)
+            {
+                return;
+            }
+
             foreach (var fixedTickableComponent in _fixedTickableComponents)
             {
                 fixedTickableComponent.FixedTick();
@@ -137,6 +195,11 @@ namespace Project.Entities
 
         public void CameraViewportExit()
         {
+            if (_isDying)
+            {
+                return;
+            }
+
             var targetYaw = 
                 _bodyTransform.eulerAngles.y 
                 + Data.TurnBackAngle 
@@ -152,12 +215,12 @@ namespace Project.Entities
 
         public void Dead()
         {
-            SetVisible(false);
+            BeginDeath();
         }
 
         public Rigidbody GetRigidbody()
         {
-            return _rigidbody;
+            return _physicsComponent.GetRigidbody();
         }
 
         public Vector3 GetPosition()
@@ -168,6 +231,11 @@ namespace Project.Entities
         public Vector3 GetMoveDirection()
         {
             return _bodyTransform.forward;
+        }
+
+        private void FinalizeDeath()
+        {
+            SetVisible(false);
         }
     }
 }

@@ -17,12 +17,12 @@ namespace Project.Entities
             ArchetypeData data, 
             int id);
         void AddComponent(IEntityRuntimeComponent component);
+        void Spawn(Vector3 spawnPosition, Quaternion bodyRotation);
+        void PrepareForSpawn();
+        void BeginDeath();
         void SetVisible(bool isVisible);
-        void SetPosition(Vector3 position);
-        void SetBodyRotation(Quaternion rotation);
         void SetBounce(Vector3 direction);
         void EatPrey(IEntity killed);
-        void Dead();
         void TickComponents();
         void FixedTickComponents();
         void CameraViewportExit();
