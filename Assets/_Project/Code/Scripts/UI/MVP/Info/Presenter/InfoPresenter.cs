@@ -8,11 +8,6 @@ using Object = UnityEngine.Object;
 
 namespace Project.UI.MVP
 {
-    public interface IInfoPresenter : IDisposable
-    {
-        void SetActive(bool isActive);
-    }
-    
     public sealed class InfoPresenter : IInfoPresenter
     {
         private readonly InfoPresenterConfig _config;
@@ -33,7 +28,7 @@ namespace Project.UI.MVP
             _eatPreySubscription = eatPreySubscriber.Subscribe(OnEatPreyMessage);
         }
 
-        public void SetActive(bool isActive)
+        void IInfoPresenter.SetActive(bool isActive)
         {
             if (isActive)
             {
@@ -46,7 +41,7 @@ namespace Project.UI.MVP
             }
         }
 
-        public void Dispose()
+        void IDisposable.Dispose()
         {
             _eatPreySubscription?.Dispose();
             Clear();
