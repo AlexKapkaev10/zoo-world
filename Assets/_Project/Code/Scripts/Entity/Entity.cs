@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using MessagePipe;
 using Project.Entities.Components;
+using Project.Messages;
 using Project.ScriptableObjects;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -11,6 +13,8 @@ namespace Project.Entities
     {
         [SerializeField] private Transform _bodyTransform;
         [SerializeField] private Rigidbody _rigidbody;
+        
+        private IPublisher<EatPreyMessage> _eatPreyPublisher;
 
         #region Components
         
@@ -21,10 +25,14 @@ namespace Project.Entities
         
         #endregion
 
+        #region Properties
+
         public event Action<IEntity> Deactivated;
         public event Action<IEntity> Destroyed;
         public ArchetypeData Data { get; private set; }
         public int ID { get; private set; }
+
+        #endregion
 
         #region UnityEvents
 
@@ -58,8 +66,9 @@ namespace Project.Entities
 
         #endregion
         
-        public void Initialize(ArchetypeData data, int id)
+        public void Initialize(IPublisher<EatPreyMessage> eatPreyPublisher, ArchetypeData data, int id)
         {
+            _eatPreyPublisher = eatPreyPublisher;
             Data = data;
             ID = id;
         }
@@ -68,12 +77,6 @@ namespace Project.Entities
         {
             SetBodyRotation(Quaternion.LookRotation(direction, Vector3.up));
             _rigidbody.AddForce(direction * Data.CollisionBounceValue, ForceMode.Impulse);
-        }
-
-        public void EatPrey(IEntity killed)
-        {
-            Debug.Log("Testy!");
-            killed.SetVisible(false);
         }
 
         public void SetVisible(bool isVisible)
@@ -110,6 +113,11 @@ namespace Project.Entities
             }
         }
 
+        public void EatPrey(IEntity killed)
+        {
+            _eatPreyPublisher?.Publish(new EatPreyMessage(this, killed));
+        }
+
         public void TickComponents()
         {
             foreach (var tickableComponent in _tickableComponents)
@@ -134,6 +142,11 @@ namespace Project.Entities
                 + Random.Range(-Data.TurnRandomDelta, Data.TurnRandomDelta);
             
             SetBodyRotation(Quaternion.Euler(0f, targetYaw, 0f));
+        }
+
+        public void Dead()
+        {
+            SetVisible(false);
         }
 
         public Rigidbody GetRigidbody()
