@@ -7,12 +7,12 @@ namespace Project.Entities
 {
     public sealed class SpawnEntityModel
     {
-        private readonly SpawnEntityServiceConfig _config;
+        private readonly EntityServiceConfig _config;
         private readonly SpawnAreaModel _spawnArea;
         private readonly Dictionary<EntityKind, int> _kindAliveMap = new();
         private readonly List<SpawnArchetypeData> _availableDates = new();
 
-        public SpawnEntityModel(SpawnEntityServiceConfig config)
+        public SpawnEntityModel(EntityServiceConfig config)
         {
             _config = config;
             _spawnArea = new SpawnAreaModel(_config.SpawnCenter, _config.SpawnRange);

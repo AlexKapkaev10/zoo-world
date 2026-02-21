@@ -13,6 +13,7 @@ namespace Project.Entities
     {
         [SerializeField] private Transform _bodyTransform;
         [SerializeField] private Rigidbody _rigidbody;
+        [SerializeField] private Transform _worldViewParent;
         
         private IPublisher<EatPreyMessage> _eatPreyPublisher;
 
@@ -142,6 +143,11 @@ namespace Project.Entities
                 + Random.Range(-Data.TurnRandomDelta, Data.TurnRandomDelta);
             
             SetBodyRotation(Quaternion.Euler(0f, targetYaw, 0f));
+        }
+
+        public Transform GetWorldViewParent()
+        {
+            return _worldViewParent;
         }
 
         public void Dead()

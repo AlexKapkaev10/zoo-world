@@ -17,13 +17,13 @@ namespace Project.Entities
         private readonly Dictionary<IEntity, SpawnArchetypeData> _entityMap = new();
         private readonly CancellationTokenSource _spawnCts = new();
         private readonly SpawnEntityModel _spawnModel;
-        private readonly SpawnEntityServiceConfig _config;
+        private readonly EntityServiceConfig _config;
         private readonly EntityPool _pool;
         private readonly ICameraService _cameraService;
         private readonly IDisposable _eatPreySubscription;
 
         [Inject]
-        public EntityService(IGameScopeFactory factory, SpawnEntityServiceConfig config)
+        public EntityService(IGameScopeFactory factory, EntityServiceConfig config)
         {
             _config = config;
             _cameraService = factory.Get<ICameraService>();
