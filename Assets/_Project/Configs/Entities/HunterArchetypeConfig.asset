@@ -12,7 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6996d105f3424a04abd16b857935a3ae, type: 3}
   m_Name: HunterArchetypeConfig
   m_EditorClassIdentifier: 
-  <Kind>k__BackingField: 0
   <Prefab>k__BackingField: {fileID: 4838079571750429784, guid: 8d976404ce7ba654292008a53a390d35, type: 3}
   <LinearMovement>k__BackingField: {fileID: 11400000, guid: fc1f705fe1c4b5944b131cf4b285c2c7, type: 2}
   <JumpMovement>k__BackingField: {fileID: 0}
+  <Data>k__BackingField:
+    Kind: 0
+    TurnBackAngle: 180
+    TurnRandomDelta: 20
+    CollisionBounceValue: 0
+  <Kind>k__BackingField: 0
+  <ViewportExitTurnBackAngle>k__BackingField: 180
+  <ViewportExitTurnRandomDelta>k__BackingField: 20

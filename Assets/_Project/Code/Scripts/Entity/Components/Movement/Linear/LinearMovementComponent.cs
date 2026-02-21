@@ -1,4 +1,5 @@
 using Project.ScriptableObjects;
+using UnityEngine;
 
 namespace Project.Entities.Components.Movement
 {
@@ -7,6 +8,7 @@ namespace Project.Entities.Components.Movement
         private readonly LinearMovementModel _model;
         
         private IEntity _entity;
+        private Rigidbody _rigidbody;
 
         public LinearMovementComponent(LinearMovementConfig config)
         {
@@ -16,13 +18,16 @@ namespace Project.Entities.Components.Movement
         public void Initialize(IEntity entity)
         {
             _entity = entity;
+            _rigidbody = _entity.GetRigidbody();
         }
 
         public void FixedTick()
         {
-            var velocity = _model.CalculateVelocity(_entity.GetMoveDirection(), _entity.GetVelocity());
+            var velocity = _model.CalculateVelocity(
+                _entity.GetMoveDirection(), 
+                _rigidbody.linearVelocity);
             
-            _entity.Rigidbody.linearVelocity = velocity;
+            _rigidbody.linearVelocity = velocity;
         }
 
         public void Dispose()

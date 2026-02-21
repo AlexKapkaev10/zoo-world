@@ -69,7 +69,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _bodyTransform: {fileID: 2170978211464900907}
-  <Rigidbody>k__BackingField: {fileID: -2557629108660935475}
+  _rigidbody: {fileID: -2557629108660935475}
 --- !u!54 &-2557629108660935475
 Rigidbody:
   m_ObjectHideFlags: 0

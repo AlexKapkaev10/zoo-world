@@ -1,5 +1,6 @@
 using System;
 using Project.Entities.Components;
+using Project.ScriptableObjects;
 using UnityEngine;
 
 namespace Project.Entities
@@ -8,20 +9,18 @@ namespace Project.Entities
     {
         event Action<IEntity> Deactivated;
         event Action<IEntity> Destroyed;
-        EntityKind Kind { get; }
-        Rigidbody Rigidbody { get; }
-        void SetId(int id);
+        ArchetypeData Data { get; }
+        int ID { get; }
+        void Initialize(ArchetypeData data, int id);
+        void AddComponent(IEntityRuntimeComponent component);
         void SetVisible(bool isVisible);
-        void SetKind(EntityKind kind);
         void SetPosition(Vector3 position);
         void SetBodyRotation(Quaternion rotation);
-        void SetViewportExitTurn(float turnBackAngle, float turnRandomDelta);
-        void AddComponent(IEntityRuntimeComponent component);
+        void SetBounce(Vector3 direction);
         void TickComponents();
         void FixedTickComponents();
         void CameraViewportExit();
-        int GetId();
-        Vector3 GetVelocity();
+        Rigidbody GetRigidbody();
         Vector3 GetPosition();
         Vector3 GetMoveDirection();
     }

@@ -94,12 +94,10 @@ namespace Project.Services.SpawnEntity
 
         private void PrepareForRelease(IEntity entity)
         {
-            if (entity.Rigidbody != null)
-            {
-                entity.Rigidbody.linearVelocity = Vector3.zero;
-                entity.Rigidbody.angularVelocity = Vector3.zero;
-            }
-
+            var rigidbody = entity.GetRigidbody();
+            rigidbody.linearVelocity = Vector3.zero;
+            rigidbody.angularVelocity = Vector3.zero;
+            
             entity.SetVisible(false);
         }
     }

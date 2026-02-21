@@ -1,57 +1,78 @@
 using System;
 using System.Collections.Generic;
 using Project.Entities.Components;
+using Project.ScriptableObjects;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Project.Entities
 {
     public sealed class Entity : MonoBehaviour, IEntity
     {
         [SerializeField] private Transform _bodyTransform;
+        [SerializeField] private Rigidbody _rigidbody;
 
+        #region Components
+        
         private readonly List<IEntityRuntimeComponent> _components = new();
         private readonly List<IEntityTickableComponent> _tickableComponents = new();
         private readonly List<IEntityFixedTickableComponent> _fixedTickableComponents = new();
         private readonly List<IEntityCollisionComponent> _collisionComponents = new();
+        
+        #endregion
 
-        private float _turnBackAngle = 180f;
-        private float _turnRandomDelta = 20f;
-        private int _id;
-
-        public EntityKind Kind { get; private set; }
-        [field: SerializeField] public Rigidbody Rigidbody { get; private set; }
         public event Action<IEntity> Deactivated;
         public event Action<IEntity> Destroyed;
-        public Transform Transform => transform;
+        public ArchetypeData Data { get; private set; }
+        public int ID { get; private set; }
 
-        public int GetId()
+        #region UnityEvents
+
+        private void OnCollisionEnter(Collision collision)
         {
-            return _id;
+            foreach (var collisionComponent in _collisionComponents)
+            {
+                collisionComponent.OnCollisionEnter(collision);
+            }
         }
 
-        public Vector3 GetVelocity()
+        private void OnDisable()
         {
-            return Rigidbody.linearVelocity;
+            Deactivated?.Invoke(this);
         }
 
-        public Vector3 GetPosition()
+        private void OnDestroy()
         {
-            return transform.position;
+            foreach (var component in _components)
+            {
+                component.Dispose();
+            }
+
+            _components.Clear();
+            _tickableComponents.Clear();
+            _fixedTickableComponents.Clear();
+            _collisionComponents.Clear();
+
+            Destroyed?.Invoke(this);
         }
 
-        public void SetId(int id)
+        #endregion
+        
+        public void Initialize(ArchetypeData data, int id)
         {
-            _id = id;
+            Data = data;
+            ID = id;
+        }
+
+        public void SetBounce(Vector3 direction)
+        {
+            SetBodyRotation(Quaternion.LookRotation(direction, Vector3.up));
+            _rigidbody.AddForce(direction * Data.CollisionBounceValue, ForceMode.Impulse);
         }
 
         public void SetVisible(bool isVisible)
         {
             gameObject.SetActive(isVisible);
-        }
-
-        public void SetKind(EntityKind kind)
-        {
-            Kind = kind;
         }
 
         public void SetPosition(Vector3 position)
@@ -62,12 +83,6 @@ namespace Project.Entities
         public void SetBodyRotation(Quaternion rotation)
         {
             _bodyTransform.rotation = rotation;
-        }
-
-        public void SetViewportExitTurn(float turnBackAngle, float turnRandomDelta)
-        {
-            _turnBackAngle = turnBackAngle;
-            _turnRandomDelta = turnRandomDelta;
         }
 
         public void AddComponent(IEntityRuntimeComponent component)
@@ -107,44 +122,27 @@ namespace Project.Entities
 
         public void CameraViewportExit()
         {
-            var currentYaw = _bodyTransform.eulerAngles.y;
-            var randomDelta = UnityEngine.Random.Range(-_turnRandomDelta, _turnRandomDelta);
-            var targetYaw = currentYaw + _turnBackAngle + randomDelta;
+            var targetYaw = 
+                _bodyTransform.eulerAngles.y 
+                + Data.TurnBackAngle 
+                + Random.Range(-Data.TurnRandomDelta, Data.TurnRandomDelta);
+            
+            SetBodyRotation(Quaternion.Euler(0f, targetYaw, 0f));
+        }
 
-            _bodyTransform.rotation = Quaternion.Euler(0f, targetYaw, 0f);
+        public Rigidbody GetRigidbody()
+        {
+            return _rigidbody;
+        }
+
+        public Vector3 GetPosition()
+        {
+            return transform.position;
         }
 
         public Vector3 GetMoveDirection()
         {
             return _bodyTransform.forward;
-        }
-
-        private void OnCollisionEnter(Collision collision)
-        {
-            foreach (var collisionComponent in _collisionComponents)
-            {
-                collisionComponent.OnCollisionEnter(collision);
-            }
-        }
-
-        private void OnDestroy()
-        {
-            foreach (var component in _components)
-            {
-                component.Dispose();
-            }
-
-            _components.Clear();
-            _tickableComponents.Clear();
-            _fixedTickableComponents.Clear();
-            _collisionComponents.Clear();
-
-            Destroyed?.Invoke(this);
-        }
-
-        private void OnDisable()
-        {
-            Deactivated?.Invoke(this);
         }
     }
 }

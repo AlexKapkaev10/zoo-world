@@ -18,9 +18,9 @@ namespace Project.Entities.Components
                 return;
             }
 
-            if (otherEntity.Kind == EntityKind.Hunter)
+            if (otherEntity.Data.Kind == EntityKind.Hunter)
             {
-                if (_entity.GetId() > otherEntity.GetId())
+                if (_entity.ID > otherEntity.ID)
                 {
                     otherEntity.SetVisible(false);
                 }

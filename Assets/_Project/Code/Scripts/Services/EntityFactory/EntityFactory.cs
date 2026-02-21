@@ -8,32 +8,30 @@ namespace Project.Services
 {
     public sealed class EntityFactory : IEntityFactory
     {
-        private int counter = 0;
+        private int counter;
         
         public IEntity Create(EntityArchetypeConfig archetype)
         {
             IEntity entity = Object.Instantiate(archetype.Prefab);
-            entity.SetId(counter);
-            entity.SetKind(archetype.Kind);
-            entity.SetViewportExitTurn(archetype.ViewportExitTurnBackAngle, archetype.ViewportExitTurnRandomDelta);
+            entity.Initialize(archetype.Data, counter++);
+            
             AttachMovementComponent(entity, archetype);
             AttachCollisionComponent(entity, archetype);
-
-            counter++;
+            
             return entity;
         }
 
         private static void AttachMovementComponent(IEntity entity, EntityArchetypeConfig archetype)
         {
-            switch (archetype.Kind)
+            switch (archetype.Data.Kind)
             {
                 case EntityKind.Frog:
                     entity.AddComponent(new JumpMovementComponent(archetype.JumpMovement));
                     break;
-
                 case EntityKind.Hunter:
+                    entity.AddComponent(new LinearMovementComponent(archetype.LinearMovement));
+                    break;
                 case EntityKind.Snake:
-                default:
                     entity.AddComponent(new LinearMovementComponent(archetype.LinearMovement));
                     break;
             }
@@ -41,7 +39,7 @@ namespace Project.Services
 
         private static void AttachCollisionComponent(IEntity entity, EntityArchetypeConfig archetype)
         {
-            if (archetype.Kind == EntityKind.Hunter)
+            if (archetype.Data.Kind == EntityKind.Hunter)
             {
                 entity.AddComponent(new HunterCollisionComponent());
                 return;

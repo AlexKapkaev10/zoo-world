@@ -24,7 +24,7 @@ namespace Project.Services.SpawnEntity
             
             foreach (SpawnArchetypeData data in _config.SpawnData)
             {
-                int aliveForKind = _kindAliveMap.GetValueOrDefault(data.Archetype.Kind, 0);
+                int aliveForKind = _kindAliveMap.GetValueOrDefault(data.Archetype.Data.Kind, 0);
                 
                 if (aliveForKind >= data.MaxAliveCount)
                 {

@@ -17,7 +17,7 @@ namespace Project.Entities.Components.Movement
         public void Initialize(IEntity entity)
         {
             _entity = entity;
-            _rigidbody = entity.Rigidbody;
+            _rigidbody = entity.GetRigidbody();
             _model.Initialize(_rigidbody);
         }
 

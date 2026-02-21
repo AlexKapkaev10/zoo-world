@@ -83,7 +83,7 @@ namespace Project.Services.SpawnEntity
             entity.Destroyed += OnEntityDestroy;
             
             _entityMap[entity] = spawnData;
-            _spawnModel.RegisterSpawn(spawnData.Archetype.Kind);
+            _spawnModel.RegisterSpawn(spawnData.Archetype.Data.Kind);
             _cameraService.AddViewportObserved(entity);
         }
 
@@ -94,7 +94,7 @@ namespace Project.Services.SpawnEntity
                 return;
             }
 
-            _spawnModel.RegisterDespawn(spawnArchetypeData.Archetype.Kind);
+            _spawnModel.RegisterDespawn(spawnArchetypeData.Archetype.Data.Kind);
 
             entity.Deactivated -= OnEntityDeactivated;
             entity.Destroyed -= OnEntityDestroy;
