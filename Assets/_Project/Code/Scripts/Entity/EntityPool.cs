@@ -1,9 +1,9 @@
 using System.Collections.Generic;
-using Project.Entities;
 using Project.ScriptableObjects;
+using Project.Services;
 using UnityEngine;
 
-namespace Project.Services.SpawnEntity
+namespace Project.Entities
 {
     public sealed class EntityPool
     {

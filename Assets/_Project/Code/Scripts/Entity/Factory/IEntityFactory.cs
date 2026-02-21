@@ -1,7 +1,6 @@
-using Project.Entities;
 using Project.ScriptableObjects;
 
-namespace Project.Services
+namespace Project.Entities
 {
     public interface IEntityFactory
     {

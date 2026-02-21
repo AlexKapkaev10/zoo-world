@@ -1,10 +1,9 @@
 using MessagePipe;
+using Project.Entities;
 using Project.Messages;
 using Project.ScopeFactory;
 using Project.ScriptableObjects;
-using Project.Services;
 using Project.Services.CameraService;
-using Project.Services.SpawnEntity;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -25,9 +24,13 @@ namespace Project.Core
 
         private void RegisterServices(IContainerBuilder builder)
         {
+            builder.RegisterEntryPoint<EntityService>()
+                .As<IEntityService>()
+                .WithParameter(_spawnEntityServiceConfig);
+            
             builder.Register<EntityFactory>(Lifetime.Scoped)
                 .As<IEntityFactory>();
-            
+
             builder.Register<GameScopeFactory>(Lifetime.Scoped)
                 .As<IGameScopeFactory>();
 
@@ -36,19 +39,11 @@ namespace Project.Core
                 .As<IInitializable>()
                 .As<ITickable>()
                 .WithParameter(_cameraServiceConfig);
-            
-            builder.Register<SpawnEntityService>(Lifetime.Scoped)
-                .As<ISpawnEntityService>()
-                .As<IStartable>()
-                .As<ITickable>()
-                .As<IFixedTickable>()
-                .WithParameter(_spawnEntityServiceConfig);
         }
 
         private void RegisterMessagePipe(IContainerBuilder builder)
         {
             var options = builder.RegisterMessagePipe();
-            
             builder.RegisterMessageBroker<EatPreyMessage>(options);
         }
     }

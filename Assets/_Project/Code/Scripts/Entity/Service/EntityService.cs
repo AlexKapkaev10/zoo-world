@@ -2,21 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Project.Entities;
+using MessagePipe;
+using Project.Messages;
+using Project.ScopeFactory;
 using Project.ScriptableObjects;
 using Project.Services.CameraService;
 using UnityEngine;
 using VContainer;
-using VContainer.Unity;
 
-namespace Project.Services.SpawnEntity
+namespace Project.Entities
 {
-    public interface ISpawnEntityService : IStartable, ITickable, IFixedTickable, IDisposable
-    {
-        
-    }
-    
-    public sealed class SpawnEntityService : ISpawnEntityService
+    public sealed class EntityService : IEntityService
     {
         private readonly Dictionary<IEntity, SpawnArchetypeData> _entityMap = new();
         private readonly CancellationTokenSource _spawnCts = new();
@@ -24,18 +20,25 @@ namespace Project.Services.SpawnEntity
         private readonly SpawnEntityServiceConfig _config;
         private readonly EntityPool _pool;
         private readonly ICameraService _cameraService;
+        private readonly IDisposable _eatPreySubscription;
 
         [Inject]
-        public SpawnEntityService(
-            ICameraService cameraService, 
-            IEntityFactory entityFactory, 
-            SpawnEntityServiceConfig config)
+        public EntityService(IGameScopeFactory factory, SpawnEntityServiceConfig config)
         {
             _config = config;
-            _cameraService = cameraService;
+            _cameraService = factory.Get<ICameraService>();
             
-            _pool = new EntityPool(entityFactory);
+            _pool = new EntityPool(factory.Get<IEntityFactory>());
             _spawnModel = new SpawnEntityModel(_config);
+
+            _eatPreySubscription = factory
+                .Get<ISubscriber<EatPreyMessage>>()
+                .Subscribe(OnEatPreyMessage);
+        }
+
+        private void OnEatPreyMessage(EatPreyMessage message)
+        {
+            message.Killed.Dead();
         }
         
         public void Start()
@@ -64,6 +67,7 @@ namespace Project.Services.SpawnEntity
         {
             _spawnCts?.Cancel();
             _spawnCts?.Dispose();
+            _eatPreySubscription?.Dispose();
 
             while (_entityMap.Count > 0)
             {

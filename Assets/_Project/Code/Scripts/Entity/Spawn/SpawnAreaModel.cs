@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Project.Services.SpawnEntity
+namespace Project.Entities
 {
     public sealed class SpawnAreaModel
     {
@@ -24,8 +24,7 @@ namespace Project.Services.SpawnEntity
 
         public Quaternion GetRandomBodyRotation()
         {
-            float random = Random.Range(0f, 360f);
-            return Quaternion.Euler(0f, random, 0f);
+            return Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
         }
     }
 }

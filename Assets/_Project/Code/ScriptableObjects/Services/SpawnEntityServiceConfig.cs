@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Project.Services.SpawnEntity;
+using Project.Entities;
 using UnityEngine;
 
 namespace Project.ScriptableObjects
