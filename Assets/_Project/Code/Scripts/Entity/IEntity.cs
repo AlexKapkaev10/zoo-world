@@ -26,6 +26,7 @@ namespace Project.Entities
         void TickComponents();
         void FixedTickComponents();
         void CameraViewportExit();
+        Transform GetWorldViewParent();
         Rigidbody GetRigidbody();
         Vector3 GetPosition();
         Vector3 GetMoveDirection();
