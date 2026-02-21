@@ -13,10 +13,14 @@ namespace Project.Entities
         event Action<IEntity> Destroyed;
         ArchetypeData Data { get; }
         int ID { get; }
+        bool IsDying { get; }
         void Initialize(IPublisher<EatPreyMessage> eatPreyPublisher, 
             ArchetypeData data, 
             int id);
         void AddComponent(IEntityRuntimeComponent component);
+        void PrepareForSpawn();
+        void PlaySpawnAnimation();
+        void BeginDeath();
         void SetVisible(bool isVisible);
         void SetPosition(Vector3 position);
         void SetBodyRotation(Quaternion rotation);

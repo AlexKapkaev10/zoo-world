@@ -10,7 +10,7 @@ namespace Project.UI
     {
         [SerializeField] private TMP_Text _textHeader;
         [SerializeField] private Transform _animatedRoot;
-        [SerializeField] private CustomWorldViewConfig _config;
+        [SerializeField] private ScaleAnimationConfig _config;
 
         private Tween _scaleTween;
 

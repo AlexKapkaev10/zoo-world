@@ -14,8 +14,11 @@ namespace Project.Entities
         [SerializeField] private Transform _bodyTransform;
         [SerializeField] private Rigidbody _rigidbody;
         [SerializeField] private Transform _worldViewParent;
+        [SerializeField] private ScaleAnimatorComponent _animatorComponent;
         
         private IPublisher<EatPreyMessage> _eatPreyPublisher;
+        private readonly List<Collider> _colliders = new();
+        private bool _rigidbodyInitialIsKinematic;
 
         #region Components
         
@@ -32,13 +35,25 @@ namespace Project.Entities
         public event Action<IEntity> Destroyed;
         public ArchetypeData Data { get; private set; }
         public int ID { get; private set; }
+        public bool IsDying { get; private set; }
 
         #endregion
 
         #region UnityEvents
 
+        private void Awake()
+        {
+            _rigidbodyInitialIsKinematic = _rigidbody.isKinematic;
+            GetComponentsInChildren(true, _colliders);
+        }
+
         private void OnCollisionEnter(Collision collision)
         {
+            if (IsDying)
+            {
+                return;
+            }
+
             foreach (var collisionComponent in _collisionComponents)
             {
                 collisionComponent.OnCollisionEnter(collision);
@@ -76,8 +91,39 @@ namespace Project.Entities
 
         public void SetBounce(Vector3 direction)
         {
+            if (IsDying)
+            {
+                return;
+            }
+
             SetBodyRotation(Quaternion.LookRotation(direction, Vector3.up));
             _rigidbody.AddForce(direction * Data.CollisionBounceValue, ForceMode.Impulse);
+        }
+
+        public void PrepareForSpawn()
+        {
+            IsDying = false;
+            RestoreRigidbodyState();
+            SetCollidersEnabled(true);
+            _animatorComponent.ResetVisual();
+        }
+
+        public void PlaySpawnAnimation()
+        {
+            _animatorComponent.PlaySpawn();
+        }
+
+        public void BeginDeath()
+        {
+            if (IsDying)
+            {
+                return;
+            }
+
+            IsDying = true;
+            SetCollidersEnabled(false);
+            FreezeRigidbody();
+            _animatorComponent.PlayDeath(FinalizeDeath);
         }
 
         public void SetVisible(bool isVisible)
@@ -121,6 +167,11 @@ namespace Project.Entities
 
         public void TickComponents()
         {
+            if (IsDying)
+            {
+                return;
+            }
+
             foreach (var tickableComponent in _tickableComponents)
             {
                 tickableComponent.Tick();
@@ -129,6 +180,11 @@ namespace Project.Entities
 
         public void FixedTickComponents()
         {
+            if (IsDying)
+            {
+                return;
+            }
+
             foreach (var fixedTickableComponent in _fixedTickableComponents)
             {
                 fixedTickableComponent.FixedTick();
@@ -137,6 +193,11 @@ namespace Project.Entities
 
         public void CameraViewportExit()
         {
+            if (IsDying)
+            {
+                return;
+            }
+
             var targetYaw = 
                 _bodyTransform.eulerAngles.y 
                 + Data.TurnBackAngle 
@@ -152,7 +213,7 @@ namespace Project.Entities
 
         public void Dead()
         {
-            SetVisible(false);
+            BeginDeath();
         }
 
         public Rigidbody GetRigidbody()
@@ -168,6 +229,37 @@ namespace Project.Entities
         public Vector3 GetMoveDirection()
         {
             return _bodyTransform.forward;
+        }
+
+        private void FreezeRigidbody()
+        {
+            _rigidbody.linearVelocity = Vector3.zero;
+            _rigidbody.angularVelocity = Vector3.zero;
+            _rigidbody.isKinematic = true;
+        }
+
+        private void RestoreRigidbodyState()
+        {
+            _rigidbody.isKinematic = _rigidbodyInitialIsKinematic;
+            
+            if (!_rigidbody.isKinematic)
+            {
+                _rigidbody.linearVelocity = Vector3.zero;
+                _rigidbody.angularVelocity = Vector3.zero;
+            }
+        }
+
+        private void SetCollidersEnabled(bool isEnabled)
+        {
+            foreach (var collider in _colliders)
+            {
+                collider.enabled = isEnabled;
+            }
+        }
+
+        private void FinalizeDeath()
+        {
+            SetVisible(false);
         }
     }
 }

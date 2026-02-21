@@ -38,7 +38,7 @@ namespace Project.Entities
 
         private void OnEatPreyMessage(EatPreyMessage message)
         {
-            message.Killed.Dead();
+            message.Killed.BeginDeath();
         }
         
         public void Start()
@@ -82,6 +82,7 @@ namespace Project.Entities
             var entity = _pool.Get(spawnData.Archetype);
             entity.SetPosition(spawnPosition);
             entity.SetBodyRotation(bodyRotation);
+            entity.PlaySpawnAnimation();
 
             entity.Deactivated += OnEntityDeactivated;
             entity.Destroyed += OnEntityDestroy;

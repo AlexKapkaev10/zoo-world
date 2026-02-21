@@ -3,8 +3,8 @@ using UnityEngine;
 
 namespace Project.ScriptableObjects
 {
-    [CreateAssetMenu(fileName = nameof(CustomWorldViewConfig), menuName = "Config/UI/Custom World View")]
-    public class CustomWorldViewConfig : ScriptableObject
+    [CreateAssetMenu(fileName = nameof(ScaleAnimationConfig), menuName = "Config/Animation/Scale")]
+    public class ScaleAnimationConfig : ScriptableObject
     {
         [field: SerializeField] public float ShowDuration {get; private set;} = 0.2f;
         [field: SerializeField] public float HideDuration {get; private set;} = 0.2f;
