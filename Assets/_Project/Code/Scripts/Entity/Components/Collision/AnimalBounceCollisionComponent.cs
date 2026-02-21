@@ -23,6 +23,11 @@ namespace Project.Entities.Components
                 return;
             }
             
+            Bounce(otherEntity);
+        }
+
+        private void Bounce(IEntity otherEntity)
+        {
             var direction = _entity.GetPosition() - otherEntity.GetPosition();
             direction.y = 0f;
             _entity.SetBounce(direction.normalized);

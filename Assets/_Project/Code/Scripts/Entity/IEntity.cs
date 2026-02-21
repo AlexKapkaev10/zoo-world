@@ -17,6 +17,7 @@ namespace Project.Entities
         void SetPosition(Vector3 position);
         void SetBodyRotation(Quaternion rotation);
         void SetBounce(Vector3 direction);
+        void EatPrey(IEntity killed);
         void TickComponents();
         void FixedTickComponents();
         void CameraViewportExit();

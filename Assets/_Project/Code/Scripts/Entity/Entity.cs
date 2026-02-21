@@ -70,6 +70,12 @@ namespace Project.Entities
             _rigidbody.AddForce(direction * Data.CollisionBounceValue, ForceMode.Impulse);
         }
 
+        public void EatPrey(IEntity killed)
+        {
+            Debug.Log("Testy!");
+            killed.SetVisible(false);
+        }
+
         public void SetVisible(bool isVisible)
         {
             gameObject.SetActive(isVisible);
