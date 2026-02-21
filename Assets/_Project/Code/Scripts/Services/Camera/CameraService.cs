@@ -1,12 +1,11 @@
 using Project.Entities;
-using Project.Models;
 using Project.ScriptableObjects;
 using UnityEngine;
 using VContainer;
 
-namespace Project.Services
+namespace Project.Services.CameraService
 {
-    public class CameraService : ICameraService
+    public sealed class CameraService : ICameraService
     {
         private readonly CameraServiceConfig _config;
         

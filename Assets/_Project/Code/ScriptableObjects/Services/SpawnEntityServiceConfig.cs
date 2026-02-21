@@ -1,13 +1,15 @@
-using Project.Entities;
+using System.Collections.Generic;
+using Project.Services.SpawnEntity;
 using UnityEngine;
 
 namespace Project.ScriptableObjects
 {
     [CreateAssetMenu(fileName = nameof(SpawnEntityServiceConfig), menuName = "Config/Service/Spawn Entity")]
-    public class SpawnEntityServiceConfig : ScriptableObject
+    public sealed class SpawnEntityServiceConfig : ScriptableObject
     {
-        [field: SerializeField] public Entity EntityPrefab { get; private set; }
-        [field: SerializeField] public float SpawnRange { get; private set; } = 2.0f;
-        [field: SerializeField] public float MaxSpawnCount { get; private set; } = 20f;
+        [field: SerializeField] public List<SpawnArchetypeData> SpawnData { get; private set; } = new();
+        [field: SerializeField, Min(0.1f)] public float SpawnIntervalSeconds { get; private set; } = 2.0f;
+        [field: SerializeField] public Vector3 SpawnCenter { get; private set; }
+        [field: SerializeField] public Vector2 SpawnRange { get; private set; }
     }
 }

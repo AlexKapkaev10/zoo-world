@@ -1,14 +1,15 @@
 using System.Collections.Generic;
 using Project.Entities;
-using Project.Game;
 using UnityEngine;
 
-namespace Project.Models
+namespace Project.Services.CameraService
 {
     public sealed class CameraViewportModel
     {
-        private readonly Dictionary<IEntity, ViewportObservedState> _observedEntityMap = new();
+        private readonly Dictionary<IEntity, CameraViewportObservedData> _observedEntityMap = new();
+        private readonly List<IEntity> _pendingRemove = new();
         private readonly Camera _camera;
+        private bool _isTicking;
 
         private const float Margin = 0.02f;
 
@@ -19,26 +20,25 @@ namespace Project.Models
 
         public void AddViewportObserved(IEntity entity)
         {
-            if (entity == null || _observedEntityMap.ContainsKey(entity))
+            _observedEntityMap[entity] = new CameraViewportObservedData
             {
-                return;
-            }
-
-            _observedEntityMap[entity] = new ViewportObservedState
-            {
-                WasInside = IsVisible(entity.Transform.position)
+                WasInside = IsVisible(entity.GetPosition())
             };
         }
 
         public void Tick()
         {
+            _isTicking = true;
             CheckExit();
+            _isTicking = false;
+            FlushPendingRemove();
         }
 
         public void RemoveViewportObserved(IEntity entity)
         {
-            if (entity == null)
+            if (_isTicking)
             {
+                _pendingRemove.Add(entity);
                 return;
             }
 
@@ -57,7 +57,7 @@ namespace Project.Models
                     continue;
                 }
 
-                var isInside = IsVisible(entity.Transform.position, Margin);
+                var isInside = IsVisible(entity.GetPosition(), Margin);
 
                 if (state.WasInside && !isInside)
                 {
@@ -70,11 +70,6 @@ namespace Project.Models
 
         private bool IsVisible(Vector3 observedPosition, float margin = 0f)
         {
-            if (_camera == null)
-            {
-                return false;
-            }
-
             var point = _camera.WorldToViewportPoint(observedPosition);
             
             if (point.z <= 0f)
@@ -91,6 +86,21 @@ namespace Project.Models
                    viewportPoint.x <= 1f + margin &&
                    viewportPoint.y >= -margin &&
                    viewportPoint.y <= 1f + margin;
+        }
+
+        private void FlushPendingRemove()
+        {
+            if (_pendingRemove.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var entity in _pendingRemove)
+            {
+                _observedEntityMap.Remove(entity);
+            }
+
+            _pendingRemove.Clear();
         }
     }
 }
