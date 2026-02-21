@@ -1,6 +1,6 @@
 using System;
+using System.Collections.Generic;
 using MessagePipe;
-using Project.Entities;
 using Project.Messages;
 using Project.ScriptableObjects;
 using VContainer;
@@ -16,6 +16,7 @@ namespace Project.UI.MVP
     public sealed class InfoPresenter : IInfoPresenter
     {
         private readonly InfoPresenterConfig _config;
+        private readonly Dictionary<InfoCounterKind, Action<string>> _viewUpdateMap = new();
         private readonly IInfoModel _model;
         private readonly IDisposable _eatPreySubscription;
 
@@ -32,38 +33,54 @@ namespace Project.UI.MVP
 
         public void SetActive(bool isActive)
         {
-            if (isActive && _view == null)
+            if (isActive)
             {
+                if (_view != null)
+                {
+                    return;
+                }
+                
                 _view = Object.Instantiate(_config.ViewPrefab);
+                BindViewHandlers();
+
+                return;
             }
-            else
-            {
-                _view.Destroy();
-                _view = null;
-            }
+            
+            _view?.Destroy();
+
+            Clear();
         }
 
         public void Dispose()
         {
             _eatPreySubscription?.Dispose();
+            Clear();
         }
 
         private void OnEatPreyMessage(EatPreyMessage message)
         {
-            var killedData = message.Killed.Data;
-            
-            _model.UpdateCounter(killedData, out int killedCount);
-
-            switch (killedData.Kind)
+            if (_view == null)
             {
-                case EntityKind.Hunter:
-                    _view.UpdateHuntersInfo(killedCount.ToString());
-                    break;
-                case EntityKind.Frog:
-                case EntityKind.Snake:
-                    _view.UpdateAnimalsInfo(killedCount.ToString());
-                    break;
+                return;
             }
+
+            var counterUpdate = _model.UpdateCounter(message.Killed.Data);
+            if (_viewUpdateMap.TryGetValue(counterUpdate.Kind, out var updateView))
+            {
+                updateView.Invoke(counterUpdate.Value.ToString());
+            }
+        }
+
+        private void BindViewHandlers()
+        {
+            _viewUpdateMap[InfoCounterKind.Hunters] = _view.UpdateHuntersInfo;
+            _viewUpdateMap[InfoCounterKind.Animals] = _view.UpdateAnimalsInfo;
+        }
+
+        private void Clear()
+        {
+            _view = null;
+            _viewUpdateMap.Clear();
         }
     }
 }

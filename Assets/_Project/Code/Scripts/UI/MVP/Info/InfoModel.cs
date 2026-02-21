@@ -3,9 +3,27 @@ using Project.ScriptableObjects;
 
 namespace Project.UI.MVP
 {
+    public enum InfoCounterKind
+    {
+        Hunters = 0,
+        Animals = 1,
+    }
+
+    public readonly struct InfoCounterUpdate
+    {
+        public readonly InfoCounterKind Kind;
+        public readonly int Value;
+
+        public InfoCounterUpdate(InfoCounterKind kind, int value)
+        {
+            Kind = kind;
+            Value = value;
+        }
+    }
+
     public interface IInfoModel
     {
-        void UpdateCounter(ArchetypeData data, out int killedCount);
+        InfoCounterUpdate UpdateCounter(ArchetypeData data);
     }
     
     public sealed class InfoModel : IInfoModel
@@ -13,37 +31,16 @@ namespace Project.UI.MVP
         public int KilledAnimalsCount { get; private set; }
         public int KilledHuntersCount { get; private set; }
 
-        public void UpdateCounter(ArchetypeData data, out int killedCount)
+        public InfoCounterUpdate UpdateCounter(ArchetypeData data)
         {
-            switch (data.Kind)
+            if (data.Kind == EntityKind.Hunter)
             {
-                case EntityKind.Hunter:
-                    KilledHuntersCount++;
-                    break;
-                case EntityKind.Frog:
-                case EntityKind.Snake:
-                    KilledAnimalsCount++;
-                    break;
+                KilledHuntersCount++;
+                return new InfoCounterUpdate(InfoCounterKind.Hunters, KilledHuntersCount);
             }
-            
-            killedCount = GetKilledCountByKind(data.Kind);
-        }
 
-        private int GetKilledCountByKind(EntityKind kind)
-        {
-            int killedCount = 0;
-            switch (kind)
-            {
-                case EntityKind.Hunter:
-                    killedCount = KilledHuntersCount;
-                    break;
-                case EntityKind.Frog:
-                case EntityKind.Snake:
-                    killedCount = KilledAnimalsCount;
-                    break;
-            }
-            
-            return killedCount;
+            KilledAnimalsCount++;
+            return new InfoCounterUpdate(InfoCounterKind.Animals, KilledAnimalsCount);
         }
     }
 }
