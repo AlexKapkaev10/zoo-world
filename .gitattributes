@@ -7,3 +7,5 @@
 *.controller linguist-generated=true
 ProjectSettings/* linguist-generated=true
 Packages/packages-lock.json linguist-generated=true
+*.wlt linguist-generated=true
+Assets/TutorialInfo/** linguist-generated=true
