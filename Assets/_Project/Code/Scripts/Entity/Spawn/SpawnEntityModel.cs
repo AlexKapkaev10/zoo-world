@@ -3,7 +3,7 @@ using Project.Entities;
 using Project.ScriptableObjects;
 using UnityEngine;
 
-namespace Project.Services.SpawnEntity
+namespace Project.Entities
 {
     public sealed class SpawnEntityModel
     {

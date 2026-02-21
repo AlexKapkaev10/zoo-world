@@ -1,19 +1,32 @@
-using Project.Entities;
+using MessagePipe;
 using Project.Entities.Components;
 using Project.Entities.Components.Movement;
+using Project.Messages;
+using Project.ScopeFactory;
 using Project.ScriptableObjects;
+using VContainer;
 using Object = UnityEngine.Object;
 
-namespace Project.Services
+namespace Project.Entities
 {
     public sealed class EntityFactory : IEntityFactory
     {
+        private readonly IGameScopeFactory _gameScopeFactory;
         private int counter;
+
+        [Inject]
+        public EntityFactory(IGameScopeFactory gameScopeFactory)
+        {
+            _gameScopeFactory = gameScopeFactory;
+        }
         
         public IEntity Create(EntityArchetypeConfig archetype)
         {
             IEntity entity = Object.Instantiate(archetype.Prefab);
-            entity.Initialize(archetype.Data, counter++);
+            entity.Initialize(
+                _gameScopeFactory.Get<IPublisher<EatPreyMessage>>(), 
+                archetype.Data, 
+                counter++);
             
             AttachMovementComponent(entity, archetype);
             AttachCollisionComponent(entity, archetype);

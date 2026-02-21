@@ -1,6 +1,6 @@
 using Project.ScriptableObjects;
 
-namespace Project.Services.SpawnEntity
+namespace Project.Entities
 {
     [System.Serializable]
     public sealed class SpawnArchetypeData
