@@ -1,3 +1,4 @@
+using Project.ScopeFactory;
 using Project.ScriptableObjects;
 using Project.Services;
 using Project.Services.CameraService;
@@ -22,6 +23,9 @@ namespace Project.Core
         {
             builder.Register<EntityFactory>(Lifetime.Scoped)
                 .As<IEntityFactory>();
+            
+            builder.Register<GameScopeFactory>(Lifetime.Scoped)
+                .As<IGameScopeFactory>();
 
             builder.Register<CameraService>(Lifetime.Scoped)
                 .As<ICameraService>()
