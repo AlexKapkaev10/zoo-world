@@ -7,5 +7,7 @@ namespace Project.ScriptableObjects
     public class ViewServiceConfig : ScriptableObject
     {
         [field: SerializeField] public CustomWorldView WorldViewPrefab { get; private set; }
+        [field: SerializeField] public string WorldViewHeader { get; private set; } = "tasty";
+        [field: SerializeField] public float WorldViewLifetimeSeconds { get; private set; } = 2f;
     }
 }

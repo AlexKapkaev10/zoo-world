@@ -49,6 +49,7 @@ namespace Project.Core
             builder.Register<ViewService>(Lifetime.Scoped)
                 .As<IViewService>()
                 .As<IInitializable>()
+                .As<ITickable>()
                 .WithParameter(_viewServiceConfig);
         }
 
