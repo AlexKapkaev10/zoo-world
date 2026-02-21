@@ -48,3 +48,7 @@ MonoBehaviour:
     TypeName: 
   autoRun: 1
   autoInjectGameObjects: []
+  _entityServiceConfig: {fileID: 11400000, guid: af37d07bf525da94494018e7c84755cc, type: 2}
+  _cameraServiceConfig: {fileID: 11400000, guid: 655bd3862a771b24db84759abafae87d, type: 2}
+  _infoPresenterConfig: {fileID: 11400000, guid: 92d7dec79ef0f3d49b4ed65259dd6596, type: 2}
+  _viewServiceConfig: {fileID: 11400000, guid: 2658d3ce52416574288497aad79204d7, type: 2}

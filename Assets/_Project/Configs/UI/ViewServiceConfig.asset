@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac04640e95e4421ea9c8b7a4aa85d0e6, type: 3}
+  m_Name: ViewServiceConfig
+  m_EditorClassIdentifier: 
+  <WorldViewPrefab>k__BackingField: {fileID: 2257705134820083001, guid: 647ae9cac03f50b43b9fe59ea4da6b32, type: 3}
+  <WorldViewHeader>k__BackingField: Tasty
+  <WorldViewLifetimeSeconds>k__BackingField: 2
