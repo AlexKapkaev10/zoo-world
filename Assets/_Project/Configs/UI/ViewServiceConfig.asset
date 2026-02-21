@@ -13,3 +13,5 @@ MonoBehaviour:
   m_Name: ViewServiceConfig
   m_EditorClassIdentifier: 
   <WorldViewPrefab>k__BackingField: {fileID: 2257705134820083001, guid: 647ae9cac03f50b43b9fe59ea4da6b32, type: 3}
+  <WorldViewHeader>k__BackingField: Tasty
+  <WorldViewLifetimeSeconds>k__BackingField: 2
