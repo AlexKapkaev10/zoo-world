@@ -1,6 +1,7 @@
 using TMPro;
 using DG.Tweening;
 using System;
+using Project.ScriptableObjects;
 using UnityEngine;
 
 namespace Project.UI
@@ -9,10 +10,7 @@ namespace Project.UI
     {
         [SerializeField] private TMP_Text _textHeader;
         [SerializeField] private Transform _animatedRoot;
-        [SerializeField] private float _showDuration = 0.2f;
-        [SerializeField] private float _hideDuration = 0.2f;
-        [SerializeField] private Ease _showEase = Ease.OutBack;
-        [SerializeField] private Ease _hideEase = Ease.InBack;
+        [SerializeField] private CustomWorldViewConfig _config;
 
         private Tween _scaleTween;
 
@@ -29,25 +27,29 @@ namespace Project.UI
         public void PlayShow(string header)
         {
             SetHeader(header);
+            
             _scaleTween?.Kill();
-            _animatedRoot.localScale = Vector3.zero;
+            
             _scaleTween = _animatedRoot
-                .DOScale(Vector3.one, _showDuration)
-                .SetEase(_showEase);
+                .DOScale(Vector3.one, _config.ShowDuration)
+                .From(0.0f)
+                .SetEase(_config.ShowEase);
         }
 
-        public void PlayHide(Action onComplete)
+        public void PlayHide(Action completeCallBack)
         {
             _scaleTween?.Kill();
+            
             _scaleTween = _animatedRoot
-                .DOScale(Vector3.zero, _hideDuration)
-                .SetEase(_hideEase)
-                .OnComplete(() => onComplete?.Invoke());
+                .DOScale(Vector3.zero, _config.HideDuration)
+                .SetEase(_config.HideEase)
+                .OnComplete(() => completeCallBack?.Invoke());
         }
 
         public void CancelHide()
         {
             _scaleTween?.Kill();
+            
             _animatedRoot.localScale = Vector3.one;
         }
 
