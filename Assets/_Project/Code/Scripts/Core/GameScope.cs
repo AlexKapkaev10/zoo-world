@@ -55,6 +55,9 @@ namespace Project.Core
 
         private void RegisterMVP(IContainerBuilder builder)
         {
+            builder.Register<InfoModel>(Lifetime.Scoped)
+                .As<IInfoModel>();
+            
             builder.Register<InfoPresenter>(Lifetime.Scoped)
                 .As<IInfoPresenter>()
                 .WithParameter(_infoPresenterConfig);

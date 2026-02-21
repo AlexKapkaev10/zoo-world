@@ -23,10 +23,12 @@ namespace Project.UI.MVP
         private IInfoView _view;
 
         [Inject]
-        public InfoPresenter(ISubscriber<EatPreyMessage> eatPreySubscriber, InfoPresenterConfig config)
+        public InfoPresenter(IInfoModel model, 
+            ISubscriber<EatPreyMessage> eatPreySubscriber, 
+            InfoPresenterConfig config)
         {
             _config = config;
-            _model = new InfoModel();
+            _model = model;
 
             _eatPreySubscription = eatPreySubscriber.Subscribe(OnEatPreyMessage);
         }
@@ -35,26 +37,30 @@ namespace Project.UI.MVP
         {
             if (isActive)
             {
-                if (_view != null)
-                {
-                    return;
-                }
-                
-                _view = Object.Instantiate(_config.ViewPrefab);
-                BindViewHandlers();
-
-                return;
+                CreateView();
             }
-            
-            _view?.Destroy();
-
-            Clear();
+            else
+            {
+                _view?.Destroy();
+                Clear();
+            }
         }
 
         public void Dispose()
         {
             _eatPreySubscription?.Dispose();
             Clear();
+        }
+
+        private void CreateView()
+        {
+            if (_view != null)
+            {
+                return;
+            }
+                
+            _view = Object.Instantiate(_config.ViewPrefab);
+            BindViewHandlers();
         }
 
         private void OnEatPreyMessage(EatPreyMessage message)
@@ -64,10 +70,11 @@ namespace Project.UI.MVP
                 return;
             }
 
-            var counterUpdate = _model.UpdateCounter(message.Killed.Data);
-            if (_viewUpdateMap.TryGetValue(counterUpdate.Kind, out var updateView))
+            var infoModelData = _model.CalculateInfoData(message.Killed.Data);
+            
+            if (_viewUpdateMap.TryGetValue(infoModelData.Kind, out var updateViewAction))
             {
-                updateView.Invoke(counterUpdate.Value.ToString());
+                updateViewAction.Invoke(infoModelData.Value.ToString());
             }
         }
 
