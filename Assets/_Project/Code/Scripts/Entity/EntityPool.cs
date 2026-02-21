@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Project.ScriptableObjects;
-using Project.Services;
 using UnityEngine;
 
 namespace Project.Entities
@@ -89,14 +88,18 @@ namespace Project.Entities
 
         private void PrepareForGet(IEntity entity)
         {
+            entity.PrepareForSpawn();
             entity.SetVisible(true);
         }
 
         private void PrepareForRelease(IEntity entity)
         {
             var rigidbody = entity.GetRigidbody();
-            rigidbody.linearVelocity = Vector3.zero;
-            rigidbody.angularVelocity = Vector3.zero;
+            if (!rigidbody.isKinematic)
+            {
+                rigidbody.linearVelocity = Vector3.zero;
+                rigidbody.angularVelocity = Vector3.zero;
+            }
             
             entity.SetVisible(false);
         }

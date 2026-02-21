@@ -3,8 +3,5 @@ using VContainer.Unity;
 
 namespace Project.UI
 {
-    public interface IViewService : IInitializable, IDisposable
-    {
-        
-    }
+    public interface IViewService : IInitializable, IDisposable { }
 }

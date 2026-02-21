@@ -38,7 +38,7 @@ namespace Project.Entities
 
         private void OnEatPreyMessage(EatPreyMessage message)
         {
-            message.Killed.Dead();
+            message.Killed.BeginDeath();
         }
         
         public void Start()
@@ -80,8 +80,7 @@ namespace Project.Entities
         private void SpawnEntity(SpawnArchetypeData spawnData, Vector3 spawnPosition, Quaternion bodyRotation)
         {
             var entity = _pool.Get(spawnData.Archetype);
-            entity.SetPosition(spawnPosition);
-            entity.SetBodyRotation(bodyRotation);
+            entity.Spawn(spawnPosition, bodyRotation);
 
             entity.Deactivated += OnEntityDeactivated;
             entity.Destroyed += OnEntityDestroy;
