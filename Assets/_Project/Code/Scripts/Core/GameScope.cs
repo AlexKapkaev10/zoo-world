@@ -1,3 +1,5 @@
+using MessagePipe;
+using Project.Messages;
 using Project.ScopeFactory;
 using Project.ScriptableObjects;
 using Project.Services;
@@ -16,6 +18,8 @@ namespace Project.Core
         
         protected override void Configure(IContainerBuilder builder)
         {
+            RegisterMessagePipe(builder);
+
             RegisterServices(builder);
         }
 
@@ -39,6 +43,13 @@ namespace Project.Core
                 .As<ITickable>()
                 .As<IFixedTickable>()
                 .WithParameter(_spawnEntityServiceConfig);
+        }
+
+        private void RegisterMessagePipe(IContainerBuilder builder)
+        {
+            var options = builder.RegisterMessagePipe();
+            
+            builder.RegisterMessageBroker<EatPreyMessage>(options);
         }
     }
 }
