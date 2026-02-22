@@ -4,8 +4,6 @@ Unity project demonstrating an optimized animal spawning system with
 physics-based movement, collisions, and survival mechanics.\
 Predators exist on the map and can consume other animals.
 
-[Project Screenshot]([./screenshot.jpeg](https://github.com/AlexKapkaev10/zoo-world/blob/main/Assets/_Project/Art/Sprites/screenshot.jpg))
-
 [Watch Video](https://drive.google.com/file/d/1MSVopLgOSmO8ccQG7Q47ZzdVkY5CRU-U/view?usp=sharing)
 
 ------------------------------------------------------------------------
