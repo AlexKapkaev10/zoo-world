@@ -19,5 +19,5 @@ MonoBehaviour:
     Kind: 1
     TurnBackAngle: 180
     TurnRandomDelta: 20
-    CollisionBounceValue: 60
-    BounceUpValue: 0.2
+    BounceForce: 60
+    BounceUpValue: 0.6

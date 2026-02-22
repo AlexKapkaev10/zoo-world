@@ -181,7 +181,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 175497698223191096, guid: 4f76d260f9f39d8418009ae6bb46a1b4, type: 3}
       propertyPath: m_fontSize
-      value: 0.6
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 175497698223191096, guid: 4f76d260f9f39d8418009ae6bb46a1b4, type: 3}
       propertyPath: m_fontStyle
@@ -189,7 +189,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 175497698223191096, guid: 4f76d260f9f39d8418009ae6bb46a1b4, type: 3}
       propertyPath: m_fontSizeBase
-      value: 0.6
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 175497698223191096, guid: 4f76d260f9f39d8418009ae6bb46a1b4, type: 3}
       propertyPath: m_VerticalAlignment

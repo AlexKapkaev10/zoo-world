@@ -10,6 +10,7 @@ namespace Project.Entities.Components.Movement
         private Rigidbody _rigidbody;
         private float _nextJumpTime;
         private float _groundCheckUnlockTime;
+        private float _horizontalVelocityResetLockUntilTime;
 
         public JumpMovementModel(JumpMovementConfig config)
         {
@@ -21,6 +22,7 @@ namespace Project.Entities.Components.Movement
             _rigidbody = rigidbody;
             _nextJumpTime = Time.fixedTime;
             _groundCheckUnlockTime = 0f;
+            _horizontalVelocityResetLockUntilTime = 0f;
         }
         
         public void AddImpulse(Vector3 moveDirection)
@@ -36,6 +38,17 @@ namespace Project.Entities.Components.Movement
         public bool CanJump(float nowTime)
         {
             return nowTime >= _nextJumpTime;
+        }
+
+        public void RegisterBounceImpulse(float nowTime)
+        {
+            _horizontalVelocityResetLockUntilTime = nowTime + _config.ResetVelocityCooldown;
+            _nextJumpTime = nowTime + GetRandomJumpInterval();
+        }
+
+        public bool CanResetHorizontalVelocity(float nowTime)
+        {
+            return nowTime >= _horizontalVelocityResetLockUntilTime;
         }
 
         public void ScheduleNextJump(float nowTime)
@@ -55,14 +68,14 @@ namespace Project.Entities.Components.Movement
 
         private Vector3 GetJumpImpulse(Vector3 moveDirection)
         {
-            Vector3 jumpImpulse = moveDirection * _config.HorizontalSpeed;
+            var jumpImpulse = moveDirection * _config.HorizontalSpeed;
             jumpImpulse.y = _config.JumpForce;
             return jumpImpulse;
         }
 
         public Vector3 GetAirborneAcceleration(Vector3 currentHorizontal, Vector3 moveDirection)
         {
-            Vector3 targetHorizontal = moveDirection * _config.HorizontalSpeed;
+            var targetHorizontal = moveDirection * _config.HorizontalSpeed;
             return targetHorizontal - currentHorizontal;
         }
 

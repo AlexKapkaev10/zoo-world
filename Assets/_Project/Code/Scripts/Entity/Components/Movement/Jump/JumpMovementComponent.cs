@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Project.Entities.Components.Movement
 {
-    public sealed class JumpMovementComponent : IEntityFixedTickableComponent
+    public sealed class JumpMovementComponent : IEntityFixedTickableComponent, IEntityBounceAwareComponent
     {
         private readonly JumpMovementModel _model;
         private IEntity _entity;
@@ -43,7 +43,10 @@ namespace Project.Entities.Components.Movement
                 return;
             }
 
-            _model.ResetHorizontalVelocity();
+            if (_model.CanResetHorizontalVelocity(nowTime))
+            {
+                _model.ResetHorizontalVelocity();
+            }
         }
 
         private void Jump(float nowTime, Vector3 moveDirection)
@@ -57,6 +60,11 @@ namespace Project.Entities.Components.Movement
             var currentHorizontal = new Vector3(_rigidbody.linearVelocity.x, 0f, _rigidbody.linearVelocity.z);
             var acceleration = _model.GetAirborneAcceleration(currentHorizontal, moveDirection);
             _rigidbody.AddForce(acceleration, ForceMode.Acceleration);
+        }
+
+        public void OnBounceImpulseApplied()
+        {
+            _model.RegisterBounceImpulse(Time.fixedTime);
         }
     }
 }
