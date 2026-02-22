@@ -38,7 +38,7 @@ namespace Project.Entities
 
         private void OnEatPreyMessage(EatPreyMessage message)
         {
-            message.Killed.BeginDeath();
+            message.Killed.StartDeath();
         }
         
         public void Start()
@@ -51,7 +51,7 @@ namespace Project.Entities
         {
             foreach (var entity in _entityMap.Keys)
             {
-                entity.TickComponents();
+                entity.Tick();
             }
         }
 
@@ -59,7 +59,7 @@ namespace Project.Entities
         {
             foreach (var entity in _entityMap.Keys)
             {
-                entity.FixedTickComponents();
+                entity.FixedTick();
             }
         }
 

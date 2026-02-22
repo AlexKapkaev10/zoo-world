@@ -14,12 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   <Prefab>k__BackingField: {fileID: 4838079571750429784, guid: 8d976404ce7ba654292008a53a390d35, type: 3}
   <LinearMovement>k__BackingField: {fileID: 11400000, guid: fc1f705fe1c4b5944b131cf4b285c2c7, type: 2}
-  <JumpMovement>k__BackingField: {fileID: 0}
+  <JumpMovement>k__BackingField: {fileID: 11400000, guid: ca5a5a81b3bde034c9503fc58c0d8f1b, type: 2}
+  <CollisionConfig>k__BackingField: {fileID: 11400000, guid: d60394080f134f24cbd82b44584fb323, type: 2}
   <Data>k__BackingField:
     Kind: 0
     TurnBackAngle: 180
     TurnRandomDelta: 20
     CollisionBounceValue: 0
-  <Kind>k__BackingField: 0
-  <ViewportExitTurnBackAngle>k__BackingField: 180
-  <ViewportExitTurnRandomDelta>k__BackingField: 20

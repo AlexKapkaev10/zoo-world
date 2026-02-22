@@ -18,6 +18,7 @@ namespace Project.ScriptableObjects
         public EntityKind Kind;
         public float TurnBackAngle;
         public float TurnRandomDelta;
-        public float CollisionBounceValue;
+        public float BounceForce;
+        public float BounceUpValue;
     }
 }

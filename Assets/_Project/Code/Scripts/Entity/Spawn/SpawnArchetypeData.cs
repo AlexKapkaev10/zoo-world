@@ -6,7 +6,7 @@ namespace Project.Entities
     public sealed class SpawnArchetypeData
     {
         public EntityArchetypeConfig Archetype;
-        public int PrewarmCount;
+        public int StartPoolCount;
         public int MaxAliveCount;
         public float MinSpawnY;
         public float MaxSpawnY;

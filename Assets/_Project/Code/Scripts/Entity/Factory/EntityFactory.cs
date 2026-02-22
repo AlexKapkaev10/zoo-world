@@ -58,7 +58,7 @@ namespace Project.Entities
                 return;
             }
 
-            entity.AddComponent(new AnimalBounceCollisionComponent());
+            entity.AddComponent(new AnimalCollisionComponent());
         }
     }
 }

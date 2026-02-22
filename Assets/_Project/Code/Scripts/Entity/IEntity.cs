@@ -4,27 +4,26 @@ using Project.Entities.Components;
 using Project.Messages;
 using Project.ScriptableObjects;
 using UnityEngine;
+using VContainer.Unity;
 
 namespace Project.Entities
 {
-    public interface IEntity
+    public interface IEntity : ITickable, IFixedTickable
     {
         event Action<IEntity> Deactivated;
         event Action<IEntity> Destroyed;
         ArchetypeData Data { get; }
         int ID { get; }
-        void Initialize(IPublisher<EatPreyMessage> eatPreyPublisher, 
+        void Initialize(
+            IPublisher<EatPreyMessage> eatPreyPublisher, 
             ArchetypeData data, 
             int id);
         void AddComponent(IEntityRuntimeComponent component);
         void Spawn(Vector3 spawnPosition, Quaternion bodyRotation);
-        void PrepareForSpawn();
-        void BeginDeath();
         void SetVisible(bool isVisible);
-        void SetBounce(Vector3 direction);
+        void SetBounce(Vector3 normalizeDirection);
         void EatPrey(IEntity killed);
-        void TickComponents();
-        void FixedTickComponents();
+        void StartDeath();
         void CameraViewportExit();
         Transform GetWorldViewParent();
         Rigidbody GetRigidbody();
