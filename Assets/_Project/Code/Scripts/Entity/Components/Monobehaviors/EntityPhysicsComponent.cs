@@ -19,7 +19,7 @@ namespace Project.Entities
             _rigidbody.AddForce(direction * forceValue, ForceMode.Impulse);
         }
 
-        public void PrepareForDeath()
+        public void Stop()
         {
             _rigidbody.linearVelocity = Vector3.zero;
             _rigidbody.angularVelocity = Vector3.zero;
@@ -27,7 +27,7 @@ namespace Project.Entities
             _rootCollider.enabled = false;
         }
 
-        public void PrepareForSpawn()
+        public void Reset()
         {
             _rigidbody.isKinematic = _initialIsKinematic;
             if (!_rigidbody.isKinematic)

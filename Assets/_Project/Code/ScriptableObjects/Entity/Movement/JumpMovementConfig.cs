@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Project.ScriptableObjects
 {
-    [CreateAssetMenu(fileName = nameof(JumpMovementConfig), menuName = "Config/Entity/Movement/Jump")]
+    [CreateAssetMenu(fileName = nameof(JumpMovementConfig), menuName = "Config/Entity/Component/Movement/Jump")]
     public sealed class JumpMovementConfig : ScriptableObject
     {
         [field: SerializeField, Min(0f)] public float HorizontalSpeed { get; private set; } = 2f;
