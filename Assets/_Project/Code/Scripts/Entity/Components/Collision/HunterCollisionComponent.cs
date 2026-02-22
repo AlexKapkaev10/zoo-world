@@ -31,6 +31,16 @@ namespace Project.Entities.Components
             Eat(_self, otherEntity);
         }
 
+        private void Eat(IEntity killer, IEntity killed)
+        {
+            killer.EatPrey(killed);
+        }
+
+        private IEntity ResolveLoser(IEntity self, IEntity other)
+        {
+            return Random.Range(0, 2) == 1 ? self : other;
+        }
+
         private bool HasFight(IEntity otherEntity)
         {
             if (otherEntity.Data.Kind != EntityKind.Hunter)
@@ -49,20 +59,6 @@ namespace Project.Entities.Components
             Eat(winner, loser);
             
             return true;
-        }
-
-        private void Eat(IEntity killer, IEntity killed)
-        {
-            killer.EatPrey(killed);
-        }
-
-        private IEntity ResolveLoser(IEntity self, IEntity other)
-        {
-            return Random.Range(0, 2) == 1 ? self : other;
-        }
-
-        public void Dispose()
-        {
         }
     }
 }

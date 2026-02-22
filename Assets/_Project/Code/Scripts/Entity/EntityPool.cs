@@ -22,10 +22,10 @@ namespace Project.Entities
             {
                 EnsureQueue(data.Archetype);
                 
-                for (int i = 0; i < data.PrewarmCount; i++)
+                for (int i = 0; i < data.StartPoolCount; i++)
                 {
                     IEntity entity = Create(data.Archetype);
-                    PrepareForRelease(entity);
+                    Clear(entity);
                     _availableByArchetype[data.Archetype].Enqueue(entity);
                     _inPool.Add(entity);
                 }
@@ -49,7 +49,6 @@ namespace Project.Entities
             }
 
             _inPool.Remove(entity);
-            PrepareForGet(entity);
             return entity;
         }
 
@@ -66,7 +65,7 @@ namespace Project.Entities
             }
 
             EnsureQueue(archetype);
-            PrepareForRelease(entity);
+            Clear(entity);
             _availableByArchetype[archetype].Enqueue(entity);
             _inPool.Add(entity);
         }
@@ -86,15 +85,10 @@ namespace Project.Entities
             }
         }
 
-        private void PrepareForGet(IEntity entity)
-        {
-            entity.PrepareForSpawn();
-            entity.SetVisible(true);
-        }
-
-        private void PrepareForRelease(IEntity entity)
+        private void Clear(IEntity entity)
         {
             var rigidbody = entity.GetRigidbody();
+            
             if (!rigidbody.isKinematic)
             {
                 rigidbody.linearVelocity = Vector3.zero;

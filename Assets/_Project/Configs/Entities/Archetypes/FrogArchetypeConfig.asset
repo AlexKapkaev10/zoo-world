@@ -20,6 +20,4 @@ MonoBehaviour:
     TurnBackAngle: 180
     TurnRandomDelta: 20
     CollisionBounceValue: 60
-  <Kind>k__BackingField: 1
-  <ViewportExitTurnBackAngle>k__BackingField: 180
-  <ViewportExitTurnRandomDelta>k__BackingField: 20
+    BounceUpValue: 0.2

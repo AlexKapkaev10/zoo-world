@@ -2,13 +2,13 @@ using UnityEngine;
 
 namespace Project.Entities.Components
 {
-    public sealed class AnimalBounceCollisionComponent : IEntityCollisionComponent
+    public sealed class AnimalCollisionComponent : IEntityCollisionComponent
     {
-        private IEntity _entity;
-
+        private IEntity _self;
+        
         public void Initialize(IEntity entity)
         {
-            _entity = entity;
+            _self = entity;
         }
 
         public void OnCollisionEnter(Collision collision)
@@ -28,13 +28,8 @@ namespace Project.Entities.Components
 
         private void Bounce(IEntity otherEntity)
         {
-            var direction = _entity.GetPosition() - otherEntity.GetPosition();
-            direction.y = 0f;
-            _entity.SetBounce(direction.normalized);
-        }
-
-        public void Dispose()
-        {
+            var direction = _self.GetPosition() - otherEntity.GetPosition();
+            _self.SetBounce(direction.normalized);
         }
     }
 }

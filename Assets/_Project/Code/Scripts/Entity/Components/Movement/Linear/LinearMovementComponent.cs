@@ -29,9 +29,5 @@ namespace Project.Entities.Components.Movement
             
             _rigidbody.linearVelocity = velocity;
         }
-
-        public void Dispose()
-        {
-        }
     }
 }

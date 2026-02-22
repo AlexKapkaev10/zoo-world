@@ -58,9 +58,5 @@ namespace Project.Entities.Components.Movement
             var acceleration = _model.GetAirborneAcceleration(currentHorizontal, moveDirection);
             _rigidbody.AddForce(acceleration, ForceMode.Acceleration);
         }
-
-        public void Dispose()
-        {
-        }
     }
 }

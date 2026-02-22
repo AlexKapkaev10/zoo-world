@@ -1,9 +1,8 @@
-using System;
 using UnityEngine;
 
 namespace Project.Entities.Components
 {
-    public interface IEntityRuntimeComponent : IDisposable
+    public interface IEntityRuntimeComponent
     {
         void Initialize(IEntity entity);
     }

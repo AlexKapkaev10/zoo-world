@@ -28,7 +28,7 @@ namespace Project.Entities
             KillScaleTween();
         }
 
-        public void ResetVisual()
+        public void Reset()
         {
             KillScaleTween();
             _targetTransform.localScale = _initialScale;

@@ -64,11 +64,6 @@ namespace Project.Entities
 
         private void OnDestroy()
         {
-            foreach (var component in _components)
-            {
-                component.Dispose();
-            }
-
             _components.Clear();
             _tickableComponents.Clear();
             _fixedTickableComponents.Clear();
@@ -81,42 +76,47 @@ namespace Project.Entities
         
         public void Initialize(IPublisher<EatPreyMessage> eatPreyPublisher, ArchetypeData data, int id)
         {
-            _eatPreyPublisher = eatPreyPublisher;
             Data = data;
             ID = id;
+            _eatPreyPublisher = eatPreyPublisher;
         }
 
-        public void SetBounce(Vector3 direction)
+        public void Spawn(Vector3 spawnPosition, Quaternion bodyRotation)
+        {
+            Reset();
+            
+            SetPosition(spawnPosition);
+            SetBodyRotation(bodyRotation);
+            
+            gameObject.SetActive(true);
+            _animatorComponent.PlaySpawn();
+        }
+
+        private void Reset()
+        {
+            _isDying = false;
+            _physicsComponent.Reset();
+            _animatorComponent.Reset();
+        }
+
+        public void SetBounce(Vector3 normalizeDirection)
         {
             if (_isDying)
             {
                 return;
             }
 
-            SetBodyRotation(Quaternion.LookRotation(direction, Vector3.up));
-            _physicsComponent.AddBounceImpulse(direction, Data.CollisionBounceValue);
+            var lookDirection = new Vector3(normalizeDirection.x, 0f, normalizeDirection.z);
+            SetBodyRotation(Quaternion.LookRotation(lookDirection.normalized, Vector3.up));
+            
+            var bounceDirection = new Vector3(normalizeDirection.x, 
+                Data.BounceUpValue, 
+                normalizeDirection.z);
+            
+            _physicsComponent.AddBounceImpulse(bounceDirection, Data.BounceForce);
         }
 
-        public void Spawn(Vector3 spawnPosition, Quaternion bodyRotation)
-        {
-            SetPosition(spawnPosition);
-            SetBodyRotation(bodyRotation);
-            PlaySpawnAnimation();
-        }
-
-        public void PrepareForSpawn()
-        {
-            _isDying = false;
-            _physicsComponent.PrepareForSpawn();
-            _animatorComponent.ResetVisual();
-        }
-
-        private void PlaySpawnAnimation()
-        {
-            _animatorComponent.PlaySpawn();
-        }
-
-        public void BeginDeath()
+        public void StartDeath()
         {
             if (_isDying)
             {
@@ -124,8 +124,8 @@ namespace Project.Entities
             }
 
             _isDying = true;
-            _physicsComponent.PrepareForDeath();
-            _animatorComponent.PlayDeath(FinalizeDeath);
+            _physicsComponent.Stop();
+            _animatorComponent.PlayDeath(OnDeath);
         }
 
         public void SetVisible(bool isVisible)
@@ -167,29 +167,29 @@ namespace Project.Entities
             _eatPreyPublisher?.Publish(new EatPreyMessage(this, killed));
         }
 
-        public void TickComponents()
+        public void Tick()
         {
             if (_isDying)
             {
                 return;
             }
 
-            foreach (var tickableComponent in _tickableComponents)
+            foreach (var component in _tickableComponents)
             {
-                tickableComponent.Tick();
+                component.Tick();
             }
         }
 
-        public void FixedTickComponents()
+        public void FixedTick()
         {
             if (_isDying)
             {
                 return;
             }
 
-            foreach (var fixedTickableComponent in _fixedTickableComponents)
+            foreach (var component in _fixedTickableComponents)
             {
-                fixedTickableComponent.FixedTick();
+                component.FixedTick();
             }
         }
 
@@ -200,22 +200,17 @@ namespace Project.Entities
                 return;
             }
 
-            var targetYaw = 
+            var backAngle = 
                 _bodyTransform.eulerAngles.y 
                 + Data.TurnBackAngle 
                 + Random.Range(-Data.TurnRandomDelta, Data.TurnRandomDelta);
             
-            SetBodyRotation(Quaternion.Euler(0f, targetYaw, 0f));
+            SetBodyRotation(Quaternion.Euler(0f, backAngle, 0f));
         }
 
         public Transform GetWorldViewParent()
         {
             return _worldViewParent;
-        }
-
-        public void Dead()
-        {
-            BeginDeath();
         }
 
         public Rigidbody GetRigidbody()
@@ -233,7 +228,7 @@ namespace Project.Entities
             return _bodyTransform.forward;
         }
 
-        private void FinalizeDeath()
+        private void OnDeath()
         {
             SetVisible(false);
         }
