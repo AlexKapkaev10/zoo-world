@@ -25,6 +25,7 @@ namespace Project.Entities
         private readonly List<IEntityTickableComponent> _tickableComponents = new();
         private readonly List<IEntityFixedTickableComponent> _fixedTickableComponents = new();
         private readonly List<IEntityCollisionComponent> _collisionComponents = new();
+        private readonly List<IEntityBounceAwareComponent> _bounceAwareComponents = new();
 
         #endregion
 
@@ -114,6 +115,7 @@ namespace Project.Entities
                 normalizeDirection.z);
             
             _physicsComponent.AddBounceImpulse(bounceDirection, Data.BounceForce);
+            NotifyBounceAwareComponents();
         }
 
         public void StartDeath()
@@ -158,6 +160,9 @@ namespace Project.Entities
                     break;
                 case IEntityCollisionComponent collisionComponent:
                     _collisionComponents.Add(collisionComponent);
+                    break;
+                case IEntityBounceAwareComponent bounceAwareComponent:
+                    _bounceAwareComponents.Add(bounceAwareComponent);
                     break;
             }
         }
@@ -231,6 +236,14 @@ namespace Project.Entities
         private void OnDeath()
         {
             SetVisible(false);
+        }
+
+        private void NotifyBounceAwareComponents()
+        {
+            foreach (var bounceAwareComponent in _bounceAwareComponents)
+            {
+                bounceAwareComponent.OnBounceImpulseApplied();
+            }
         }
     }
 }
