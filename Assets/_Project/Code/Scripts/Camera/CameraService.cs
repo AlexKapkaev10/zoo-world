@@ -20,7 +20,7 @@ namespace Project.Services.CameraService
         
         public void Initialize()
         {
-            _camera = Object.Instantiate(_config.CameraPrefab);
+            CreateCamera();
             _viewportModel = new CameraViewportModel(_camera);
         }
 
@@ -37,6 +37,13 @@ namespace Project.Services.CameraService
         public void RemoveViewportObserved(IEntity entity)
         {
             _viewportModel.RemoveViewportObserved(entity);
+        }
+
+        private void CreateCamera()
+        {
+            _camera = Object.Instantiate(_config.CameraPrefab);
+            _camera.transform.position = _config.CameraSpawnPosition;
+            _camera.transform.localEulerAngles = _config.CameraSpawnRotation;
         }
     }
 }

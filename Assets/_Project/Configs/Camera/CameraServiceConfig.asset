@@ -13,3 +13,5 @@ MonoBehaviour:
   m_Name: CameraServiceConfig
   m_EditorClassIdentifier: 
   <CameraPrefab>k__BackingField: {fileID: 8942156282483452094, guid: 87d705e404cf7b1468dfe09e56d0cf5f, type: 3}
+  <CameraSpawnPosition>k__BackingField: {x: 0, y: 14, z: 0}
+  <CameraSpawnRotation>k__BackingField: {x: 90, y: 0, z: 0}
