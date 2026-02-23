@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Project.Entities.Components.Movement
 {
-    public sealed class JumpMovementComponent : IEntityFixedTickableComponent, IEntityBounceAwareComponent
+    public sealed class JumpMovementComponent : IEntityFixedTickableComponent, IEntityBounceApply
     {
         private readonly JumpMovementModel _model;
         private IEntity _entity;
@@ -62,7 +62,7 @@ namespace Project.Entities.Components.Movement
             _rigidbody.AddForce(acceleration, ForceMode.Acceleration);
         }
 
-        public void OnBounceImpulseApplied()
+        public void OnBounceApply()
         {
             _model.RegisterBounceImpulse(Time.fixedTime);
         }

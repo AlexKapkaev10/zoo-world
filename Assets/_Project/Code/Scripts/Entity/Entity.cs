@@ -1,8 +1,5 @@
 using System;
-using System.Collections.Generic;
-using MessagePipe;
 using Project.Entities.Components;
-using Project.Messages;
 using Project.ScriptableObjects;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -13,28 +10,19 @@ namespace Project.Entities
     {
         [SerializeField] private Transform _bodyTransform;
         [SerializeField] private Transform _worldViewParent;
-        [SerializeField] private ScaleAnimatorComponent _animatorComponent;
-        [SerializeField] private EntityPhysicsComponent _physicsComponent;
         
-        private IPublisher<EatPreyMessage> _eatPreyPublisher;
+        [SerializeField] private AnimatorBehavior _animatorBehavior;
+        [SerializeField] private PhysicsBehavior _physicsBehavior;
+        
+        private EntityComponentsController _componentsController;
         private bool _isDying;
-        
-        #region RuntimeComponents
-
-        private readonly List<IEntityRuntimeComponent> _components = new();
-        private readonly List<IEntityTickableComponent> _tickableComponents = new();
-        private readonly List<IEntityFixedTickableComponent> _fixedTickableComponents = new();
-        private readonly List<IEntityCollisionComponent> _collisionComponents = new();
-        private readonly List<IEntityBounceAwareComponent> _bounceAwareComponents = new();
-
-        #endregion
 
         #region Properties
 
         public event Action<IEntity> Deactivated;
         public event Action<IEntity> Destroyed;
         public ArchetypeData Data { get; private set; }
-        public int ID { get; private set; }
+        public int Id { get; private set; }
 
         #endregion
 
@@ -42,7 +30,8 @@ namespace Project.Entities
 
         private void Awake()
         {
-            _physicsComponent.Initialize();
+            _physicsBehavior.Initialize();
+            _componentsController = new EntityComponentsController(this);
         }
 
         private void OnCollisionEnter(Collision collision)
@@ -51,11 +40,8 @@ namespace Project.Entities
             {
                 return;
             }
-
-            foreach (var collisionComponent in _collisionComponents)
-            {
-                collisionComponent.OnCollisionEnter(collision);
-            }
+            
+            _componentsController.OnCollisionEnter(collision);
         }
 
         private void OnDisable()
@@ -65,21 +51,17 @@ namespace Project.Entities
 
         private void OnDestroy()
         {
-            _components.Clear();
-            _tickableComponents.Clear();
-            _fixedTickableComponents.Clear();
-            _collisionComponents.Clear();
+            _componentsController.Clear();
 
             Destroyed?.Invoke(this);
         }
 
         #endregion
         
-        public void Initialize(IPublisher<EatPreyMessage> eatPreyPublisher, ArchetypeData data, int id)
+        public void Initialize(ArchetypeData data, int id)
         {
             Data = data;
-            ID = id;
-            _eatPreyPublisher = eatPreyPublisher;
+            Id = id;
         }
 
         public void Spawn(Vector3 spawnPosition, Quaternion bodyRotation)
@@ -90,14 +72,17 @@ namespace Project.Entities
             SetBodyRotation(bodyRotation);
             
             gameObject.SetActive(true);
-            _animatorComponent.PlaySpawn();
+            _animatorBehavior.PlaySpawn();
         }
 
-        private void Reset()
+        public void AddComponent(IEntityRuntimeComponent component)
         {
-            _isDying = false;
-            _physicsComponent.Reset();
-            _animatorComponent.Reset();
+            _componentsController.AddComponent(component);
+        }
+
+        public void SetVisible(bool isVisible)
+        {
+            gameObject.SetActive(isVisible);
         }
 
         public void SetBounce(Vector3 normalizeDirection)
@@ -106,16 +91,28 @@ namespace Project.Entities
             {
                 return;
             }
+            
+            BounceApply(normalizeDirection);
+        }
 
-            var lookDirection = new Vector3(normalizeDirection.x, 0f, normalizeDirection.z);
-            SetBodyRotation(Quaternion.LookRotation(lookDirection.normalized, Vector3.up));
+        public void Tick()
+        {
+            if (_isDying)
+            {
+                return;
+            }
+
+            _componentsController.Tick();
+        }
+
+        public void FixedTick()
+        {
+            if (_isDying)
+            {
+                return;
+            }
             
-            var bounceDirection = new Vector3(normalizeDirection.x, 
-                Data.BounceUpValue, 
-                normalizeDirection.z);
-            
-            _physicsComponent.AddBounceImpulse(bounceDirection, Data.BounceForce);
-            NotifyBounceAwareComponents();
+            _componentsController.FixedTick();
         }
 
         public void StartDeath()
@@ -126,76 +123,8 @@ namespace Project.Entities
             }
 
             _isDying = true;
-            _physicsComponent.Stop();
-            _animatorComponent.PlayDeath(OnDeath);
-        }
-
-        public void SetVisible(bool isVisible)
-        {
-            gameObject.SetActive(isVisible);
-        }
-
-        private void SetPosition(Vector3 position)
-        {
-            transform.position = position;
-        }
-
-        private void SetBodyRotation(Quaternion rotation)
-        {
-            _bodyTransform.rotation = rotation;
-        }
-
-        public void AddComponent(IEntityRuntimeComponent component)
-        {
-            component.Initialize(this);
-            _components.Add(component);
-
-            switch (component)
-            {
-                case IEntityTickableComponent tickableComponent:
-                    _tickableComponents.Add(tickableComponent);
-                    break;
-                case IEntityFixedTickableComponent fixedTickableComponent:
-                    _fixedTickableComponents.Add(fixedTickableComponent);
-                    break;
-                case IEntityCollisionComponent collisionComponent:
-                    _collisionComponents.Add(collisionComponent);
-                    break;
-                case IEntityBounceAwareComponent bounceAwareComponent:
-                    _bounceAwareComponents.Add(bounceAwareComponent);
-                    break;
-            }
-        }
-
-        public void EatPrey(IEntity killed)
-        {
-            _eatPreyPublisher?.Publish(new EatPreyMessage(this, killed));
-        }
-
-        public void Tick()
-        {
-            if (_isDying)
-            {
-                return;
-            }
-
-            foreach (var component in _tickableComponents)
-            {
-                component.Tick();
-            }
-        }
-
-        public void FixedTick()
-        {
-            if (_isDying)
-            {
-                return;
-            }
-
-            foreach (var component in _fixedTickableComponents)
-            {
-                component.FixedTick();
-            }
+            _physicsBehavior.Stop();
+            _animatorBehavior.PlayDeath(OnDeath);
         }
 
         public void CameraViewportExit()
@@ -213,14 +142,14 @@ namespace Project.Entities
             SetBodyRotation(Quaternion.Euler(0f, backAngle, 0f));
         }
 
-        public Transform GetWorldViewParent()
+        public Transform GetViewParent()
         {
             return _worldViewParent;
         }
 
         public Rigidbody GetRigidbody()
         {
-            return _physicsComponent.GetRigidbody();
+            return _physicsBehavior.GetRigidbody();
         }
 
         public Vector3 GetPosition()
@@ -232,18 +161,41 @@ namespace Project.Entities
         {
             return _bodyTransform.forward;
         }
+        
+        private void Reset()
+        {
+            _isDying = false;
+            _physicsBehavior.Reset();
+            _animatorBehavior.Reset();
+        }
+        
+        private void SetPosition(Vector3 position)
+        {
+            transform.position = position;
+        }
+
+        private void SetBodyRotation(Quaternion rotation)
+        {
+            _bodyTransform.rotation = rotation;
+        }
 
         private void OnDeath()
         {
             SetVisible(false);
         }
 
-        private void NotifyBounceAwareComponents()
+        private void BounceApply(Vector3 normalizeDirection)
         {
-            foreach (var bounceAwareComponent in _bounceAwareComponents)
-            {
-                bounceAwareComponent.OnBounceImpulseApplied();
-            }
+            var lookDirection = new Vector3(normalizeDirection.x, 0f, normalizeDirection.z);
+            SetBodyRotation(Quaternion.LookRotation(lookDirection.normalized, Vector3.up));
+            
+            var bounceDirection = new Vector3(normalizeDirection.x, 
+                Data.BounceUpValue, 
+                normalizeDirection.z);
+            
+            _physicsBehavior.AddBounceImpulse(bounceDirection, Data.BounceForce);
+            
+            _componentsController.BounceApply();
         }
     }
 }

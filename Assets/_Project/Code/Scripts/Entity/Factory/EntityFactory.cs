@@ -23,10 +23,7 @@ namespace Project.Entities
         public IEntity Create(EntityArchetypeConfig archetype)
         {
             IEntity entity = Object.Instantiate(archetype.Prefab);
-            entity.Initialize(
-                _gameScopeFactory.Get<IPublisher<EatPreyMessage>>(),
-                archetype.Data,
-                _nextId++);
+            entity.Initialize(archetype.Data, _nextId++);
 
             AttachMovementComponent(entity, archetype);
             AttachCollisionComponent(entity, archetype);
@@ -49,7 +46,8 @@ namespace Project.Entities
         {
             if (archetype.Data.Kind == EntityKind.Hunter)
             {
-                entity.AddComponent(new HunterCollisionComponent());
+                entity.AddComponent(new HunterCollisionComponent(
+                    _gameScopeFactory.Get<IPublisher<EatPreyMessage>>()));
                 return;
             }
 

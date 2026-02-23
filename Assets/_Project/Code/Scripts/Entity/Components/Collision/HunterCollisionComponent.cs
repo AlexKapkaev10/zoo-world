@@ -1,10 +1,18 @@
+using MessagePipe;
+using Project.Messages;
 using UnityEngine;
 
 namespace Project.Entities.Components
 {
     public sealed class HunterCollisionComponent : IEntityCollisionComponent
     {
+        private readonly IPublisher<EatPreyMessage> _eatPreyPublisher;
         private IEntity _self;
+
+        public HunterCollisionComponent(IPublisher<EatPreyMessage> eatPreyPublisher)
+        {
+            _eatPreyPublisher = eatPreyPublisher;
+        }
 
         public void Initialize(IEntity entity)
         {
@@ -33,7 +41,7 @@ namespace Project.Entities.Components
 
         private void Eat(IEntity killer, IEntity killed)
         {
-            killer.EatPrey(killed);
+            _eatPreyPublisher.Publish(new EatPreyMessage(killer, killed));
         }
 
         private IEntity ResolveLoser(IEntity self, IEntity other)
@@ -48,7 +56,7 @@ namespace Project.Entities.Components
                 return false;
             }
 
-            if (_self.ID < otherEntity.ID)
+            if (_self.Id < otherEntity.Id)
             {
                 return true;
             }

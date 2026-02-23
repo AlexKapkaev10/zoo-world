@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Project.Entities
 {
-    public sealed class ScaleAnimatorComponent : MonoBehaviour
+    public sealed class AnimatorBehavior : MonoBehaviour
     {
         [SerializeField] private Transform _targetTransform;
         [SerializeField] private ScaleAnimationConfig _config;
