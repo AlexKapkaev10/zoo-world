@@ -6,13 +6,12 @@ namespace Project.Services.CameraService
 {
     public sealed class CameraViewportModel
     {
-        private readonly Dictionary<IEntity, CameraViewportObservedData> _observedEntityMap = new();
-        private readonly List<IEntity> _pendingRemove = new();
+        private readonly Dictionary<int, ObservedEntityState> _observedByEntityId = new();
+        private readonly List<int> _pendingRemoveIds = new();
+
         private readonly Camera _camera;
         private bool _isTicking;
-
-        private const float Margin = 0.02f;
-
+        
         public CameraViewportModel(Camera camera)
         {
             _camera = camera;
@@ -20,8 +19,16 @@ namespace Project.Services.CameraService
 
         public void AddViewportObserved(IEntity entity)
         {
-            _observedEntityMap[entity] = new CameraViewportObservedData
+            if (entity == null)
             {
+                return;
+            }
+
+            var id = entity.Id;
+
+            _observedByEntityId[id] = new ObservedEntityState
+            {
+                Entity = entity,
                 WasInside = IsVisible(entity.GetPosition())
             };
         }
@@ -36,29 +43,41 @@ namespace Project.Services.CameraService
 
         public void RemoveViewportObserved(IEntity entity)
         {
-            if (_isTicking)
+            if (entity == null)
             {
-                _pendingRemove.Add(entity);
                 return;
             }
 
-            _observedEntityMap.Remove(entity);
+            RemoveViewportObserved(entity.Id);
+        }
+
+        private void RemoveViewportObserved(int entityId)
+        {
+            if (_isTicking)
+            {
+                _pendingRemoveIds.Add(entityId);
+                return;
+            }
+
+            _observedByEntityId.Remove(entityId);
         }
 
         private void CheckExit()
         {
-            foreach (var keyValuePair in _observedEntityMap)
+            foreach (var pair in _observedByEntityId)
             {
-                var entity = keyValuePair.Key;
-                var state = keyValuePair.Value;
+                var entityId = pair.Key;
+                var state = pair.Value;
+
+                var entity = state.Entity;
 
                 if (entity == null)
                 {
-                    _pendingRemove.Add(entity);
+                    _pendingRemoveIds.Add(entityId);
                     continue;
                 }
 
-                var isInside = IsVisible(entity.GetPosition(), Margin);
+                var isInside = IsVisible(entity.GetPosition());
 
                 if (state.WasInside && !isInside)
                 {
@@ -69,7 +88,7 @@ namespace Project.Services.CameraService
             }
         }
 
-        private bool IsVisible(Vector3 observedPosition, float margin = 0f)
+        private bool IsVisible(Vector3 observedPosition, float margin = 0.02f)
         {
             var point = _camera.WorldToViewportPoint(observedPosition);
 
@@ -91,17 +110,17 @@ namespace Project.Services.CameraService
 
         private void FlushPendingRemove()
         {
-            if (_pendingRemove.Count == 0)
+            if (_pendingRemoveIds.Count == 0)
             {
                 return;
             }
 
-            foreach (var entity in _pendingRemove)
+            foreach (var id in _pendingRemoveIds)
             {
-                _observedEntityMap.Remove(entity);
+                _observedByEntityId.Remove(id);
             }
 
-            _pendingRemove.Clear();
+            _pendingRemoveIds.Clear();
         }
     }
 }

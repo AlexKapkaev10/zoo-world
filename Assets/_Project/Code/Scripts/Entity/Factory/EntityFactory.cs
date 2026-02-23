@@ -22,7 +22,7 @@ namespace Project.Entities
 
         public IEntity Create(EntityArchetypeConfig archetype)
         {
-            IEntity entity = Object.Instantiate(archetype.Prefab);
+            var entity = Object.Instantiate(archetype.Prefab);
             entity.Initialize(archetype.Data, _nextId++);
 
             AttachMovementComponent(entity, archetype);
