@@ -31,7 +31,7 @@ namespace Project.UI
                 return;
             }
 
-            var view = Object.Instantiate(_config.WorldViewPrefab, entity.GetWorldViewParent());
+            var view = Object.Instantiate(_config.WorldViewPrefab, entity.GetViewParent());
             
             var worldViewState = new WorldViewState
             {

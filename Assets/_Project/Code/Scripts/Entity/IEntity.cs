@@ -1,7 +1,5 @@
 using System;
-using MessagePipe;
 using Project.Entities.Components;
-using Project.Messages;
 using Project.ScriptableObjects;
 using UnityEngine;
 using VContainer.Unity;
@@ -12,22 +10,23 @@ namespace Project.Entities
     {
         event Action<IEntity> Deactivated;
         event Action<IEntity> Destroyed;
+
         ArchetypeData Data { get; }
-        int ID { get; }
-        void Initialize(
-            IPublisher<EatPreyMessage> eatPreyPublisher, 
-            ArchetypeData data, 
-            int id);
+        int Id { get; }
+
+        void Initialize(ArchetypeData data, int id);
         void AddComponent(IEntityRuntimeComponent component);
+
         void Spawn(Vector3 spawnPosition, Quaternion bodyRotation);
-        void SetVisible(bool isVisible);
-        void SetBounce(Vector3 normalizeDirection);
-        void EatPrey(IEntity killed);
-        void StartDeath();
+        void SetActive(bool isActive);
+
+        void SetBounce(Vector3 direction);
         void CameraViewportExit();
-        Transform GetWorldViewParent();
-        Rigidbody GetRigidbody();
+        void StartDeath();
+
         Vector3 GetPosition();
         Vector3 GetMoveDirection();
+        Rigidbody GetRigidbody();
+        Transform GetViewParent();
     }
 }

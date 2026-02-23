@@ -12,49 +12,42 @@ namespace Project.Entities
     public sealed class EntityFactory : IEntityFactory
     {
         private readonly IGameScopeFactory _gameScopeFactory;
-        private int counter;
+        private int _nextId;
 
         [Inject]
         public EntityFactory(IGameScopeFactory gameScopeFactory)
         {
             _gameScopeFactory = gameScopeFactory;
         }
-        
+
         public IEntity Create(EntityArchetypeConfig archetype)
         {
             IEntity entity = Object.Instantiate(archetype.Prefab);
-            entity.Initialize(
-                _gameScopeFactory.Get<IPublisher<EatPreyMessage>>(), 
-                archetype.Data, 
-                counter++);
-            
+            entity.Initialize(archetype.Data, _nextId++);
+
             AttachMovementComponent(entity, archetype);
             AttachCollisionComponent(entity, archetype);
-            
+
             return entity;
         }
 
-        private static void AttachMovementComponent(IEntity entity, EntityArchetypeConfig archetype)
+        private void AttachMovementComponent(IEntity entity, EntityArchetypeConfig archetype)
         {
-            switch (archetype.Data.Kind)
+            if (archetype.Data.Kind == EntityKind.JumpAnimal)
             {
-                case EntityKind.JumpAnimal:
-                    entity.AddComponent(new JumpMovementComponent(archetype.JumpMovement));
-                    break;
-                case EntityKind.Hunter:
-                    entity.AddComponent(new LinearMovementComponent(archetype.LinearMovement));
-                    break;
-                case EntityKind.LinearAnimal:
-                    entity.AddComponent(new LinearMovementComponent(archetype.LinearMovement));
-                    break;
+                entity.AddComponent(new JumpMovementComponent(archetype.JumpMovement));
+                return;
             }
+
+            entity.AddComponent(new LinearMovementComponent(archetype.LinearMovement));
         }
 
-        private static void AttachCollisionComponent(IEntity entity, EntityArchetypeConfig archetype)
+        private void AttachCollisionComponent(IEntity entity, EntityArchetypeConfig archetype)
         {
             if (archetype.Data.Kind == EntityKind.Hunter)
             {
-                entity.AddComponent(new HunterCollisionComponent());
+                entity.AddComponent(new HunterCollisionComponent(
+                    _gameScopeFactory.Get<IPublisher<EatPreyMessage>>()));
                 return;
             }
 

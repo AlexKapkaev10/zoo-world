@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Project.Entities
 {
-    public sealed class EntityPhysicsComponent : MonoBehaviour
+    public sealed class PhysicsBehavior : MonoBehaviour
     {
         [SerializeField] private Rigidbody _rigidbody;
         [SerializeField] private Collider _rootCollider;
