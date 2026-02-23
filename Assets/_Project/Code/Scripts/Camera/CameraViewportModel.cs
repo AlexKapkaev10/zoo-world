@@ -54,6 +54,7 @@ namespace Project.Services.CameraService
 
                 if (entity == null)
                 {
+                    _pendingRemove.Add(entity);
                     continue;
                 }
 
@@ -71,7 +72,7 @@ namespace Project.Services.CameraService
         private bool IsVisible(Vector3 observedPosition, float margin = 0f)
         {
             var point = _camera.WorldToViewportPoint(observedPosition);
-            
+
             if (point.z <= 0f)
             {
                 return false;

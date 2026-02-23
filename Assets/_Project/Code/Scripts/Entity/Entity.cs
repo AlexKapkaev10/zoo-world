@@ -1,61 +1,46 @@
 using System;
-using System.Collections.Generic;
-using MessagePipe;
 using Project.Entities.Components;
-using Project.Messages;
 using Project.ScriptableObjects;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
 namespace Project.Entities
 {
     public sealed class Entity : MonoBehaviour, IEntity
     {
-        [SerializeField] private Transform _bodyTransform;
-        [SerializeField] private Transform _worldViewParent;
-        [SerializeField] private ScaleAnimatorComponent _animatorComponent;
-        [SerializeField] private EntityPhysicsComponent _physicsComponent;
-        
-        private IPublisher<EatPreyMessage> _eatPreyPublisher;
-        private bool _isDying;
-        
-        #region RuntimeComponents
+        [SerializeField] private Transform _body;
+        [SerializeField] private Transform _viewParent;
 
-        private readonly List<IEntityRuntimeComponent> _components = new();
-        private readonly List<IEntityTickableComponent> _tickableComponents = new();
-        private readonly List<IEntityFixedTickableComponent> _fixedTickableComponents = new();
-        private readonly List<IEntityCollisionComponent> _collisionComponents = new();
-        private readonly List<IEntityBounceAwareComponent> _bounceAwareComponents = new();
+        [SerializeField] private AnimatorBehavior _animatorBehavior;
+        [SerializeField] private PhysicsBehavior _physicsBehavior;
 
-        #endregion
-
-        #region Properties
+        private EntityComponentsController _componentsController;
+        private EntityLifecycle _lifecycle;
+        private EntityBounceController _bounceController;
+        private ViewportExitHandler _viewportExitHandler;
 
         public event Action<IEntity> Deactivated;
         public event Action<IEntity> Destroyed;
         public ArchetypeData Data { get; private set; }
-        public int ID { get; private set; }
-
-        #endregion
-
-        #region UnityEvents
+        public int Id { get; private set; }
 
         private void Awake()
         {
-            _physicsComponent.Initialize();
+            _physicsBehavior.Initialize();
+            
+            _componentsController = new EntityComponentsController(this);
+            _lifecycle = new EntityLifecycle(_physicsBehavior, _animatorBehavior, OnDeath);
+            _bounceController = new EntityBounceController(_body, _physicsBehavior, _componentsController);
+            _viewportExitHandler = new ViewportExitHandler(_body);
         }
 
         private void OnCollisionEnter(Collision collision)
         {
-            if (_isDying)
+            if (_lifecycle.IsDying)
             {
                 return;
             }
 
-            foreach (var collisionComponent in _collisionComponents)
-            {
-                collisionComponent.OnCollisionEnter(collision);
-            }
+            _componentsController.OnCollisionEnter(collision);
         }
 
         private void OnDisable()
@@ -65,162 +50,93 @@ namespace Project.Entities
 
         private void OnDestroy()
         {
-            _components.Clear();
-            _tickableComponents.Clear();
-            _fixedTickableComponents.Clear();
-            _collisionComponents.Clear();
+            _componentsController.Clear();
 
             Destroyed?.Invoke(this);
         }
 
-        #endregion
-        
-        public void Initialize(IPublisher<EatPreyMessage> eatPreyPublisher, ArchetypeData data, int id)
+        public void Initialize(ArchetypeData data, int id)
         {
             Data = data;
-            ID = id;
-            _eatPreyPublisher = eatPreyPublisher;
+            Id = id;
+            _bounceController.SetData(data);
+            _viewportExitHandler.SetData(data);
         }
 
         public void Spawn(Vector3 spawnPosition, Quaternion bodyRotation)
         {
-            Reset();
-            
+            _lifecycle.Reset();
+
             SetPosition(spawnPosition);
             SetBodyRotation(bodyRotation);
-            
+
             gameObject.SetActive(true);
-            _animatorComponent.PlaySpawn();
-        }
-
-        private void Reset()
-        {
-            _isDying = false;
-            _physicsComponent.Reset();
-            _animatorComponent.Reset();
-        }
-
-        public void SetBounce(Vector3 normalizeDirection)
-        {
-            if (_isDying)
-            {
-                return;
-            }
-
-            var lookDirection = new Vector3(normalizeDirection.x, 0f, normalizeDirection.z);
-            SetBodyRotation(Quaternion.LookRotation(lookDirection.normalized, Vector3.up));
-            
-            var bounceDirection = new Vector3(normalizeDirection.x, 
-                Data.BounceUpValue, 
-                normalizeDirection.z);
-            
-            _physicsComponent.AddBounceImpulse(bounceDirection, Data.BounceForce);
-            NotifyBounceAwareComponents();
-        }
-
-        public void StartDeath()
-        {
-            if (_isDying)
-            {
-                return;
-            }
-
-            _isDying = true;
-            _physicsComponent.Stop();
-            _animatorComponent.PlayDeath(OnDeath);
-        }
-
-        public void SetVisible(bool isVisible)
-        {
-            gameObject.SetActive(isVisible);
-        }
-
-        private void SetPosition(Vector3 position)
-        {
-            transform.position = position;
-        }
-
-        private void SetBodyRotation(Quaternion rotation)
-        {
-            _bodyTransform.rotation = rotation;
+            _animatorBehavior.PlaySpawn();
         }
 
         public void AddComponent(IEntityRuntimeComponent component)
         {
-            component.Initialize(this);
-            _components.Add(component);
-
-            switch (component)
-            {
-                case IEntityTickableComponent tickableComponent:
-                    _tickableComponents.Add(tickableComponent);
-                    break;
-                case IEntityFixedTickableComponent fixedTickableComponent:
-                    _fixedTickableComponents.Add(fixedTickableComponent);
-                    break;
-                case IEntityCollisionComponent collisionComponent:
-                    _collisionComponents.Add(collisionComponent);
-                    break;
-                case IEntityBounceAwareComponent bounceAwareComponent:
-                    _bounceAwareComponents.Add(bounceAwareComponent);
-                    break;
-            }
+            _componentsController.AddComponent(component);
         }
 
-        public void EatPrey(IEntity killed)
+        public void SetActive(bool isActive)
         {
-            _eatPreyPublisher?.Publish(new EatPreyMessage(this, killed));
+            gameObject.SetActive(isActive);
+        }
+
+        public void SetBounce(Vector3 direction)
+        {
+            if (_lifecycle.IsDying)
+            {
+                return;
+            }
+
+            _bounceController.Apply(direction);
         }
 
         public void Tick()
         {
-            if (_isDying)
+            if (_lifecycle.IsDying)
             {
                 return;
             }
 
-            foreach (var component in _tickableComponents)
-            {
-                component.Tick();
-            }
+            _componentsController.Tick();
         }
 
         public void FixedTick()
         {
-            if (_isDying)
+            if (_lifecycle.IsDying)
             {
                 return;
             }
 
-            foreach (var component in _fixedTickableComponents)
-            {
-                component.FixedTick();
-            }
+            _componentsController.FixedTick();
+        }
+
+        public void StartDeath()
+        {
+            _lifecycle.StartDeath();
         }
 
         public void CameraViewportExit()
         {
-            if (_isDying)
+            if (_lifecycle.IsDying)
             {
                 return;
             }
 
-            var backAngle = 
-                _bodyTransform.eulerAngles.y 
-                + Data.TurnBackAngle 
-                + Random.Range(-Data.TurnRandomDelta, Data.TurnRandomDelta);
-            
-            SetBodyRotation(Quaternion.Euler(0f, backAngle, 0f));
+            _viewportExitHandler.HandleExit();
         }
 
-        public Transform GetWorldViewParent()
+        public Transform GetViewParent()
         {
-            return _worldViewParent;
+            return _viewParent;
         }
 
         public Rigidbody GetRigidbody()
         {
-            return _physicsComponent.GetRigidbody();
+            return _physicsBehavior.GetRigidbody();
         }
 
         public Vector3 GetPosition()
@@ -230,20 +146,22 @@ namespace Project.Entities
 
         public Vector3 GetMoveDirection()
         {
-            return _bodyTransform.forward;
+            return _body.forward;
+        }
+
+        private void SetPosition(Vector3 position)
+        {
+            transform.position = position;
+        }
+
+        private void SetBodyRotation(Quaternion rotation)
+        {
+            _body.rotation = rotation;
         }
 
         private void OnDeath()
         {
-            SetVisible(false);
-        }
-
-        private void NotifyBounceAwareComponents()
-        {
-            foreach (var bounceAwareComponent in _bounceAwareComponents)
-            {
-                bounceAwareComponent.OnBounceImpulseApplied();
-            }
+            SetActive(false);
         }
     }
 }
