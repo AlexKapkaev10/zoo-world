@@ -64,12 +64,11 @@ and simplifies testing.
 
 ## Applied Patterns
 
--   Object Pool\
--   Factory\
--   Component-Based Architecture\
--   Strategy\
--   Model-View-Presenter (MVP)\
--   Dependency Injection (VContainer)\
+-   Object Pool
+-   Factory
+-   Component-Based Architecture
+-   Model-View-Presenter (MVP)
+-   Dependency Injection (VContainer)
 -   Event Bus (MessagePipe)
 
 ------------------------------------------------------------------------
