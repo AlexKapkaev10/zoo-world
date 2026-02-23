@@ -10,14 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6996d105f3424a04abd16b857935a3ae, type: 3}
-  m_Name: HunterArchetypeConfig
+  m_Name: BirdArchetypeConfig
   m_EditorClassIdentifier: 
-  <Prefab>k__BackingField: {fileID: 4838079571750429784, guid: 8d976404ce7ba654292008a53a390d35, type: 3}
-  <LinearMovement>k__BackingField: {fileID: 11400000, guid: f877f6484470b1d488f6279c2515b41b, type: 2}
+  <Prefab>k__BackingField: {fileID: 1063197078419839531, guid: ff0e4de350eeb8346b5bcc1bebc367fb, type: 3}
+  <LinearMovement>k__BackingField: {fileID: 11400000, guid: 3c4940ce08b90b64a92fbfa8df3c0857, type: 2}
   <JumpMovement>k__BackingField: {fileID: 0}
   <Data>k__BackingField:
-    Kind: 0
+    Kind: 2
     TurnBackAngle: 180
     TurnRandomDelta: 20
-    BounceForce: 0
+    BounceForce: 30
     BounceUpValue: 0

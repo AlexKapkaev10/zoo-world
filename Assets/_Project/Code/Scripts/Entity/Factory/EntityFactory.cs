@@ -38,13 +38,13 @@ namespace Project.Entities
         {
             switch (archetype.Data.Kind)
             {
-                case EntityKind.Frog:
+                case EntityKind.JumpAnimal:
                     entity.AddComponent(new JumpMovementComponent(archetype.JumpMovement));
                     break;
                 case EntityKind.Hunter:
                     entity.AddComponent(new LinearMovementComponent(archetype.LinearMovement));
                     break;
-                case EntityKind.Snake:
+                case EntityKind.LinearAnimal:
                     entity.AddComponent(new LinearMovementComponent(archetype.LinearMovement));
                     break;
             }
