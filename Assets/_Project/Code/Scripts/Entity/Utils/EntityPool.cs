@@ -7,27 +7,27 @@ namespace Project.Entities
     public sealed class EntityPool
     {
         private readonly IEntityFactory _entityFactory;
-        private readonly Dictionary<EntityArchetypeConfig, Queue<IEntity>> _availableByArchetype = new();
+        private readonly Dictionary<EntityArchetypeConfig, Queue<IEntity>> _availableEntitiesByArchetype = new();
         private readonly Dictionary<IEntity, EntityArchetypeConfig> _archetypeByEntity = new();
-        private readonly HashSet<IEntity> _inPool = new();
+        private readonly HashSet<IEntity> _entitiesInPool = new();
 
         public EntityPool(IEntityFactory entityFactory)
         {
             _entityFactory = entityFactory;
         }
 
-        public void Prewarm(IEnumerable<SpawnArchetypeData> dates)
+        public void Prewarm(IEnumerable<SpawnArchetypeData> data)
         {
-            foreach (SpawnArchetypeData data in dates)
+            foreach (SpawnArchetypeData spawnData in data)
             {
-                EnsureQueue(data.Archetype);
-                
-                for (int i = 0; i < data.StartPoolCount; i++)
+                EnsureQueue(spawnData.Archetype);
+
+                for (int i = 0; i < spawnData.StartPoolCount; i++)
                 {
-                    IEntity entity = Create(data.Archetype);
-                    Clear(entity);
-                    _availableByArchetype[data.Archetype].Enqueue(entity);
-                    _inPool.Add(entity);
+                    IEntity entity = Create(spawnData.Archetype);
+                    ResetForPool(entity);
+                    _availableEntitiesByArchetype[spawnData.Archetype].Enqueue(entity);
+                    _entitiesInPool.Add(entity);
                 }
             }
         }
@@ -35,12 +35,16 @@ namespace Project.Entities
         public IEntity Get(EntityArchetypeConfig archetype)
         {
             EnsureQueue(archetype);
-            Queue<IEntity> queue = _availableByArchetype[archetype];
+            Queue<IEntity> queue = _availableEntitiesByArchetype[archetype];
 
             IEntity entity = null;
-            while (queue.Count > 0 && entity == null)
+            while (queue.Count > 0)
             {
                 entity = queue.Dequeue();
+                if (entity != null)
+                {
+                    break;
+                }
             }
 
             if (entity == null)
@@ -48,13 +52,13 @@ namespace Project.Entities
                 entity = Create(archetype);
             }
 
-            _inPool.Remove(entity);
+            _entitiesInPool.Remove(entity);
             return entity;
         }
 
         public void Release(IEntity entity)
         {
-            if (_inPool.Contains(entity))
+            if (_entitiesInPool.Contains(entity))
             {
                 return;
             }
@@ -65,9 +69,9 @@ namespace Project.Entities
             }
 
             EnsureQueue(archetype);
-            Clear(entity);
-            _availableByArchetype[archetype].Enqueue(entity);
-            _inPool.Add(entity);
+            ResetForPool(entity);
+            _availableEntitiesByArchetype[archetype].Enqueue(entity);
+            _entitiesInPool.Add(entity);
         }
 
         private IEntity Create(EntityArchetypeConfig archetype)
@@ -79,22 +83,22 @@ namespace Project.Entities
 
         private void EnsureQueue(EntityArchetypeConfig archetype)
         {
-            if (!_availableByArchetype.ContainsKey(archetype))
+            if (!_availableEntitiesByArchetype.ContainsKey(archetype))
             {
-                _availableByArchetype[archetype] = new Queue<IEntity>();
+                _availableEntitiesByArchetype[archetype] = new Queue<IEntity>();
             }
         }
 
-        private void Clear(IEntity entity)
+        private void ResetForPool(IEntity entity)
         {
             var rigidbody = entity.GetRigidbody();
-            
+
             if (!rigidbody.isKinematic)
             {
                 rigidbody.linearVelocity = Vector3.zero;
                 rigidbody.angularVelocity = Vector3.zero;
             }
-            
+
             entity.SetActive(false);
         }
     }

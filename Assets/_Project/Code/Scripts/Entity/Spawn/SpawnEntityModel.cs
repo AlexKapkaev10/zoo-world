@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Project.Entities;
 using Project.ScriptableObjects;
 using UnityEngine;
 
@@ -9,8 +8,9 @@ namespace Project.Entities
     {
         private readonly EntityServiceConfig _config;
         private readonly SpawnAreaModel _spawnArea;
-        private readonly Dictionary<EntityKind, int> _kindAliveMap = new();
-        private readonly List<SpawnArchetypeData> _availableDates = new();
+
+        private readonly Dictionary<EntityKind, int> _aliveCountByKind = new();
+        private readonly List<SpawnArchetypeData> _eligibleSpawnDataBuffer = new();
 
         public SpawnEntityModel(EntityServiceConfig config)
         {
@@ -18,31 +18,31 @@ namespace Project.Entities
             _spawnArea = new SpawnAreaModel(_config.SpawnCenter, _config.SpawnRange);
         }
 
-        public bool TryGetSpawnRequest(out SpawnArchetypeData spawnData, out Vector3 spawnPosition, out Quaternion bodyRotation)
+        public bool TryGetSpawnRequest(out SpawnArchetypeData spawnData,
+            out Vector3 spawnPosition,
+            out Quaternion bodyRotation)
         {
-            _availableDates.Clear();
-            
-            foreach (SpawnArchetypeData data in _config.SpawnData)
+            _eligibleSpawnDataBuffer.Clear();
+
+            foreach (var candidate in _config.SpawnData)
             {
-                int aliveForKind = _kindAliveMap.GetValueOrDefault(data.Archetype.Data.Kind, 0);
-                
-                if (aliveForKind >= data.MaxAliveCount)
+                if (!CanSpawn(candidate))
                 {
                     continue;
                 }
 
-                _availableDates.Add(data);
+                _eligibleSpawnDataBuffer.Add(candidate);
             }
 
-            if (_availableDates.Count == 0)
+            if (_eligibleSpawnDataBuffer.Count == 0)
             {
                 spawnData = null;
                 spawnPosition = default;
                 bodyRotation = default;
                 return false;
             }
-            
-            spawnData = _availableDates[Random.Range(0, _availableDates.Count)];
+
+            spawnData = _eligibleSpawnDataBuffer[Random.Range(0, _eligibleSpawnDataBuffer.Count)];
             spawnPosition = _spawnArea.GetRandomPosition(spawnData.MinSpawnY, spawnData.MaxSpawnY);
             bodyRotation = _spawnArea.GetRandomBodyRotation();
             return true;
@@ -50,12 +50,18 @@ namespace Project.Entities
 
         public void RegisterSpawn(EntityKind kind)
         {
-            _kindAliveMap[kind] = _kindAliveMap.TryGetValue(kind, out int current) ? current + 1 : 1;
+            if (_aliveCountByKind.TryGetValue(kind, out var current))
+            {
+                _aliveCountByKind[kind] = current + 1;
+                return;
+            }
+
+            _aliveCountByKind[kind] = 1;
         }
 
         public void RegisterDespawn(EntityKind kind)
         {
-            if (!_kindAliveMap.TryGetValue(kind, out int current))
+            if (!_aliveCountByKind.TryGetValue(kind, out var current))
             {
                 return;
             }
@@ -63,11 +69,19 @@ namespace Project.Entities
             current--;
             if (current <= 0)
             {
-                _kindAliveMap.Remove(kind);
+                _aliveCountByKind.Remove(kind);
                 return;
             }
 
-            _kindAliveMap[kind] = current;
+            _aliveCountByKind[kind] = current;
+        }
+
+        private bool CanSpawn(SpawnArchetypeData spawnData)
+        {
+            var kind = spawnData.Archetype.Data.Kind;
+
+            var aliveForKind = _aliveCountByKind.GetValueOrDefault(kind, 0);
+            return aliveForKind < spawnData.MaxAliveCount;
         }
     }
 }

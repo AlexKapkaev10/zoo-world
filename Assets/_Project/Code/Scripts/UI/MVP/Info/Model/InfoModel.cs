@@ -3,12 +3,6 @@ using Project.ScriptableObjects;
 
 namespace Project.UI.MVP
 {
-    public enum InfoCounterKind
-    {
-        Hunters = 0,
-        Animals = 1,
-    }
-
     public sealed class InfoModel : IInfoModel
     {
         private int _killedHuntersCount;

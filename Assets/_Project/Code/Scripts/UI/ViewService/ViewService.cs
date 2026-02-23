@@ -11,7 +11,7 @@ namespace Project.UI
 {
     public class ViewService : IViewService, ITickable
     {
-        private readonly EntityWorldViewRuntime _worldViewRuntime;
+        private readonly WorldViewRuntime _worldViewRuntime;
         private readonly IInfoPresenter _infoPresenter;
         private readonly IDisposable _eatPreySubscription;
 
@@ -19,9 +19,9 @@ namespace Project.UI
         public ViewService(IGameScopeFactory factory, ViewServiceConfig config)
         {
             _infoPresenter = factory.Get<IInfoPresenter>();
-            
-            _worldViewRuntime = new EntityWorldViewRuntime(config);
-            
+
+            _worldViewRuntime = new WorldViewRuntime(config);
+
             _eatPreySubscription = factory
                 .Get<ISubscriber<EatPreyMessage>>()
                 .Subscribe(OnEatPreyMessage);
@@ -29,9 +29,9 @@ namespace Project.UI
 
         private void OnEatPreyMessage(EatPreyMessage message)
         {
-            _worldViewRuntime.HandleEatPreyMessage(message.Killer);
+            _worldViewRuntime.Handle(message.Killer?.GetViewParent());
         }
-        
+
         public void Initialize()
         {
             _infoPresenter.SetActive(true);

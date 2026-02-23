@@ -69,8 +69,8 @@ namespace Project.Entities
 
             SetPosition(spawnPosition);
             SetBodyRotation(bodyRotation);
-
-            gameObject.SetActive(true);
+            
+            SetActive(true);
             _animatorBehavior.PlaySpawn();
         }
 
