@@ -4,7 +4,7 @@ Unity project demonstrating an optimized animal spawning system with
 physics-based movement, collisions, and survival mechanics.\
 Predators exist on the map and can consume other animals.
 
-[Watch Video](https://drive.google.com/file/d/1MSVopLgOSmO8ccQG7Q47ZzdVkY5CRU-U/view?usp=sharing)
+[Watch gameplay video](https://drive.google.com/file/d/1MSVopLgOSmO8ccQG7Q47ZzdVkY5CRU-U/view?usp=sharing)
 
 ------------------------------------------------------------------------
 
@@ -44,6 +44,8 @@ Pipeline for adding a new animal:
 
 This approach allows the system to scale to hundreds of different
 animals --- from crabs to birds.
+
+[Watch video](https://drive.google.com/file/d/1JNRXWM9B221bLXiX5e8wpoOFdwj1pQvv/view?usp=sharing)
 
 ------------------------------------------------------------------------
 
