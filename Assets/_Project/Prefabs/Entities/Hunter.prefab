@@ -127,7 +127,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6902514680749726502, guid: 0692b1f8560b83842ab777426da5731d, type: 3}
       propertyPath: m_Name
-      value: BaseBody
+      value: HunterSkin
       objectReference: {fileID: 0}
     - target: {fileID: 8190672061245826270, guid: 0692b1f8560b83842ab777426da5731d, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
