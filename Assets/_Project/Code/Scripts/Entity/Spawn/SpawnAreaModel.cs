@@ -15,9 +15,9 @@ namespace Project.Entities
 
         public Vector3 GetRandomPosition(float minY, float maxY)
         {
-            float randomX = Random.Range(_center.x - _range.x, _center.x + _range.x);
-            float randomZ = Random.Range(_center.z - _range.y, _center.z + _range.y);
-            float randomY = Random.Range(minY, maxY);
+            var randomX = Random.Range(_center.x - _range.x, _center.x + _range.x);
+            var randomZ = Random.Range(_center.z - _range.y, _center.z + _range.y);
+            var randomY = Random.Range(minY, maxY);
             
             return new Vector3(randomX, randomY, randomZ);
         }

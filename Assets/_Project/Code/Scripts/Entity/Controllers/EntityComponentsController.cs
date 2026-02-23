@@ -48,14 +48,6 @@ namespace Project.Entities
             }
         }
 
-        public void Clear()
-        {
-            _components.Clear();
-            _tickableComponents.Clear();
-            _fixedTickableComponents.Clear();
-            _collisionComponents.Clear();
-        }
-
         public void Tick()
         {
             foreach (var component in _tickableComponents)
@@ -78,6 +70,15 @@ namespace Project.Entities
             {
                 bounceAwareComponent.OnBounceApply();
             }
+        }
+
+        public void Clear()
+        {
+            _components.Clear();
+            _tickableComponents.Clear();
+            _fixedTickableComponents.Clear();
+            _collisionComponents.Clear();
+            _bounceApplies.Clear();
         }
     }
 }
