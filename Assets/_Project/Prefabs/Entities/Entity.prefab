@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 518010806688359270}
   - component: {fileID: 7342493245996680340}
   m_Layer: 0
-  m_Name: AnimatorComponent
+  m_Name: AnimatorBehavior
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -90,7 +90,7 @@ GameObject:
   - component: {fileID: 3717255571061748585}
   - component: {fileID: 629488562101328960}
   m_Layer: 0
-  m_Name: PhisycsComponent
+  m_Name: PhisycsBehavior
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -197,8 +197,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _bodyTransform: {fileID: 2170978211464900907}
   _worldViewParent: {fileID: 3203832477775636682}
-  _animatorComponent: {fileID: 7342493245996680340}
-  _physicsComponent: {fileID: 629488562101328960}
+  _animatorBehavior: {fileID: 7342493245996680340}
+  _physicsBehavior: {fileID: 629488562101328960}
 --- !u!54 &-2557629108660935475
 Rigidbody:
   m_ObjectHideFlags: 0

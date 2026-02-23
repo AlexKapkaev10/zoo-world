@@ -95,7 +95,7 @@ namespace Project.Entities
                 rigidbody.angularVelocity = Vector3.zero;
             }
             
-            entity.SetVisible(false);
+            entity.SetActive(false);
         }
     }
 }

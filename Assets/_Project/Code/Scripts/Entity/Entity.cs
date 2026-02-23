@@ -10,23 +10,17 @@ namespace Project.Entities
     {
         [SerializeField] private Transform _bodyTransform;
         [SerializeField] private Transform _worldViewParent;
-        
+
         [SerializeField] private AnimatorBehavior _animatorBehavior;
         [SerializeField] private PhysicsBehavior _physicsBehavior;
-        
+
         private EntityComponentsController _componentsController;
         private bool _isDying;
-
-        #region Properties
 
         public event Action<IEntity> Deactivated;
         public event Action<IEntity> Destroyed;
         public ArchetypeData Data { get; private set; }
         public int Id { get; private set; }
-
-        #endregion
-
-        #region UnityEvents
 
         private void Awake()
         {
@@ -40,7 +34,7 @@ namespace Project.Entities
             {
                 return;
             }
-            
+
             _componentsController.OnCollisionEnter(collision);
         }
 
@@ -56,8 +50,6 @@ namespace Project.Entities
             Destroyed?.Invoke(this);
         }
 
-        #endregion
-        
         public void Initialize(ArchetypeData data, int id)
         {
             Data = data;
@@ -66,11 +58,11 @@ namespace Project.Entities
 
         public void Spawn(Vector3 spawnPosition, Quaternion bodyRotation)
         {
-            Reset();
-            
+            ResetState();
+
             SetPosition(spawnPosition);
             SetBodyRotation(bodyRotation);
-            
+
             gameObject.SetActive(true);
             _animatorBehavior.PlaySpawn();
         }
@@ -80,19 +72,19 @@ namespace Project.Entities
             _componentsController.AddComponent(component);
         }
 
-        public void SetVisible(bool isVisible)
+        public void SetActive(bool isActive)
         {
-            gameObject.SetActive(isVisible);
+            gameObject.SetActive(isActive);
         }
 
-        public void SetBounce(Vector3 normalizeDirection)
+        public void SetBounce(Vector3 direction)
         {
             if (_isDying)
             {
                 return;
             }
-            
-            BounceApply(normalizeDirection);
+
+            ApplyBounce(direction.normalized);
         }
 
         public void Tick()
@@ -111,7 +103,7 @@ namespace Project.Entities
             {
                 return;
             }
-            
+
             _componentsController.FixedTick();
         }
 
@@ -134,11 +126,11 @@ namespace Project.Entities
                 return;
             }
 
-            var backAngle = 
-                _bodyTransform.eulerAngles.y 
-                + Data.TurnBackAngle 
+            var backAngle =
+                _bodyTransform.eulerAngles.y
+                + Data.TurnBackAngle
                 + Random.Range(-Data.TurnRandomDelta, Data.TurnRandomDelta);
-            
+
             SetBodyRotation(Quaternion.Euler(0f, backAngle, 0f));
         }
 
@@ -161,14 +153,14 @@ namespace Project.Entities
         {
             return _bodyTransform.forward;
         }
-        
-        private void Reset()
+
+        private void ResetState()
         {
             _isDying = false;
             _physicsBehavior.Reset();
             _animatorBehavior.Reset();
         }
-        
+
         private void SetPosition(Vector3 position)
         {
             transform.position = position;
@@ -181,20 +173,21 @@ namespace Project.Entities
 
         private void OnDeath()
         {
-            SetVisible(false);
+            SetActive(false);
         }
 
-        private void BounceApply(Vector3 normalizeDirection)
+        private void ApplyBounce(Vector3 directionNormalized)
         {
-            var lookDirection = new Vector3(normalizeDirection.x, 0f, normalizeDirection.z);
-            SetBodyRotation(Quaternion.LookRotation(lookDirection.normalized, Vector3.up));
-            
-            var bounceDirection = new Vector3(normalizeDirection.x, 
-                Data.BounceUpValue, 
-                normalizeDirection.z);
-            
+            var lookDirection = new Vector3(directionNormalized.x, 0f, directionNormalized.z);
+            SetBodyRotation(Quaternion.LookRotation(lookDirection, Vector3.up));
+
+            var bounceDirection = new Vector3(
+                directionNormalized.x,
+                Data.BounceUpValue,
+                directionNormalized.z);
+
             _physicsBehavior.AddBounceImpulse(bounceDirection, Data.BounceForce);
-            
+
             _componentsController.BounceApply();
         }
     }
