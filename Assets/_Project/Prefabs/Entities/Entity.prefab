@@ -195,8 +195,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b19f57824414396ba0d4a702013b260, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _bodyTransform: {fileID: 2170978211464900907}
-  _worldViewParent: {fileID: 3203832477775636682}
+  _body: {fileID: 2170978211464900907}
+  _viewParent: {fileID: 3203832477775636682}
   _animatorBehavior: {fileID: 7342493245996680340}
   _physicsBehavior: {fileID: 629488562101328960}
 --- !u!54 &-2557629108660935475

@@ -2,20 +2,21 @@ using System;
 using Project.Entities.Components;
 using Project.ScriptableObjects;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
 namespace Project.Entities
 {
     public sealed class Entity : MonoBehaviour, IEntity
     {
-        [SerializeField] private Transform _bodyTransform;
-        [SerializeField] private Transform _worldViewParent;
+        [SerializeField] private Transform _body;
+        [SerializeField] private Transform _viewParent;
 
         [SerializeField] private AnimatorBehavior _animatorBehavior;
         [SerializeField] private PhysicsBehavior _physicsBehavior;
 
         private EntityComponentsController _componentsController;
-        private bool _isDying;
+        private EntityLifecycle _lifecycle;
+        private EntityBounceController _bounceController;
+        private ViewportExitHandler _viewportExitHandler;
 
         public event Action<IEntity> Deactivated;
         public event Action<IEntity> Destroyed;
@@ -25,12 +26,16 @@ namespace Project.Entities
         private void Awake()
         {
             _physicsBehavior.Initialize();
+            
             _componentsController = new EntityComponentsController(this);
+            _lifecycle = new EntityLifecycle(_physicsBehavior, _animatorBehavior, OnDeath);
+            _bounceController = new EntityBounceController(_body, _physicsBehavior, _componentsController);
+            _viewportExitHandler = new ViewportExitHandler(_body);
         }
 
         private void OnCollisionEnter(Collision collision)
         {
-            if (_isDying)
+            if (_lifecycle.IsDying)
             {
                 return;
             }
@@ -54,11 +59,13 @@ namespace Project.Entities
         {
             Data = data;
             Id = id;
+            _bounceController.SetData(data);
+            _viewportExitHandler.SetData(data);
         }
 
         public void Spawn(Vector3 spawnPosition, Quaternion bodyRotation)
         {
-            ResetState();
+            _lifecycle.Reset();
 
             SetPosition(spawnPosition);
             SetBodyRotation(bodyRotation);
@@ -79,17 +86,17 @@ namespace Project.Entities
 
         public void SetBounce(Vector3 direction)
         {
-            if (_isDying)
+            if (_lifecycle.IsDying)
             {
                 return;
             }
 
-            ApplyBounce(direction.normalized);
+            _bounceController.Apply(direction);
         }
 
         public void Tick()
         {
-            if (_isDying)
+            if (_lifecycle.IsDying)
             {
                 return;
             }
@@ -99,7 +106,7 @@ namespace Project.Entities
 
         public void FixedTick()
         {
-            if (_isDying)
+            if (_lifecycle.IsDying)
             {
                 return;
             }
@@ -109,34 +116,22 @@ namespace Project.Entities
 
         public void StartDeath()
         {
-            if (_isDying)
-            {
-                return;
-            }
-
-            _isDying = true;
-            _physicsBehavior.Stop();
-            _animatorBehavior.PlayDeath(OnDeath);
+            _lifecycle.StartDeath();
         }
 
         public void CameraViewportExit()
         {
-            if (_isDying)
+            if (_lifecycle.IsDying)
             {
                 return;
             }
 
-            var backAngle =
-                _bodyTransform.eulerAngles.y
-                + Data.TurnBackAngle
-                + Random.Range(-Data.TurnRandomDelta, Data.TurnRandomDelta);
-
-            SetBodyRotation(Quaternion.Euler(0f, backAngle, 0f));
+            _viewportExitHandler.HandleExit();
         }
 
         public Transform GetViewParent()
         {
-            return _worldViewParent;
+            return _viewParent;
         }
 
         public Rigidbody GetRigidbody()
@@ -151,14 +146,7 @@ namespace Project.Entities
 
         public Vector3 GetMoveDirection()
         {
-            return _bodyTransform.forward;
-        }
-
-        private void ResetState()
-        {
-            _isDying = false;
-            _physicsBehavior.Reset();
-            _animatorBehavior.Reset();
+            return _body.forward;
         }
 
         private void SetPosition(Vector3 position)
@@ -168,27 +156,12 @@ namespace Project.Entities
 
         private void SetBodyRotation(Quaternion rotation)
         {
-            _bodyTransform.rotation = rotation;
+            _body.rotation = rotation;
         }
 
         private void OnDeath()
         {
             SetActive(false);
-        }
-
-        private void ApplyBounce(Vector3 directionNormalized)
-        {
-            var lookDirection = new Vector3(directionNormalized.x, 0f, directionNormalized.z);
-            SetBodyRotation(Quaternion.LookRotation(lookDirection, Vector3.up));
-
-            var bounceDirection = new Vector3(
-                directionNormalized.x,
-                Data.BounceUpValue,
-                directionNormalized.z);
-
-            _physicsBehavior.AddBounceImpulse(bounceDirection, Data.BounceForce);
-
-            _componentsController.BounceApply();
         }
     }
 }
