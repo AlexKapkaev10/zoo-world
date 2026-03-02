@@ -25,27 +25,25 @@ namespace Project.Entities
 
         public void TrySpawnOne()
         {
-            if (!_spawnModel.TryGetSpawnRequest(
-                    out var spawnData,
-                    out var spawnPosition,
-                    out var bodyRotation))
+            var spawnData = _spawnModel.TryGetSpawnRequest();
+            if (spawnData == null)
             {
                 return;
             }
 
-            SpawnInternal(spawnData, spawnPosition, bodyRotation);
+            SpawnInternal(spawnData);
         }
 
-        private void SpawnInternal(SpawnArchetypeData spawnData, Vector3 spawnPosition, Quaternion bodyRotation)
+        private void SpawnInternal(SpawnEntityData spawnData)
         {
-            var entity = _pool.Get(spawnData.Archetype);
-            entity.Spawn(spawnPosition, bodyRotation);
+            var entity = _pool.Get(spawnData.ArchetypeData.Archetype);
+            entity.Spawn(spawnData.SpawnPosition, spawnData.BodyRotation);
 
             entity.Deactivated += OnEntityDeactivated;
             entity.Destroyed += OnEntityDestroyed;
 
-            _spawnDataByEntity[entity] = spawnData;
-            _spawnModel.RegisterSpawn(spawnData.Archetype.Data.Kind);
+            _spawnDataByEntity[entity] = spawnData.ArchetypeData;
+            _spawnModel.RegisterSpawn(spawnData.ArchetypeData.Archetype.Data.Kind);
             _cameraService.AddViewportObserved(entity);
         }
 
