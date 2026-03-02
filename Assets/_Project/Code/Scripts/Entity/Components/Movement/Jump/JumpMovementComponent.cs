@@ -28,14 +28,19 @@ namespace Project.Entities.Components.Movement
 
             if (_model.IsGroundedAllowed(nowTime) && _model.IsGrounded(_entity.GetPosition()))
             {
-                HandleGrounded(nowTime, moveDirection);
+                TryJump(nowTime, moveDirection);
                 return;
             }
 
-            HandleAirborne(moveDirection);
+            UpdateMove(moveDirection);
         }
 
-        private void HandleGrounded(float nowTime, Vector3 moveDirection)
+        public void OnBounceApply()
+        {
+            _model.RegisterBounceImpulse(Time.fixedTime);
+        }
+
+        private void TryJump(float nowTime, Vector3 moveDirection)
         {
             if (_model.CanJump(nowTime))
             {
@@ -55,16 +60,11 @@ namespace Project.Entities.Components.Movement
             _model.AddImpulse(moveDirection);
         }
 
-        private void HandleAirborne(Vector3 moveDirection)
+        private void UpdateMove(Vector3 moveDirection)
         {
             var currentHorizontal = new Vector3(_rigidbody.linearVelocity.x, 0f, _rigidbody.linearVelocity.z);
             var acceleration = _model.GetAirborneAcceleration(currentHorizontal, moveDirection);
             _rigidbody.AddForce(acceleration, ForceMode.Acceleration);
-        }
-
-        public void OnBounceApply()
-        {
-            _model.RegisterBounceImpulse(Time.fixedTime);
         }
     }
 }

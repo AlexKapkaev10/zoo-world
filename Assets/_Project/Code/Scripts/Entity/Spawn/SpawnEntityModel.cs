@@ -10,7 +10,7 @@ namespace Project.Entities
         private readonly SpawnAreaModel _spawnArea;
 
         private readonly Dictionary<EntityKind, int> _aliveCountByKind = new();
-        private readonly List<SpawnArchetypeData> _eligibleSpawnDataBuffer = new();
+        private readonly List<SpawnArchetypeData> _spawnDataBuffer = new();
 
         public SpawnEntityModel(EntityServiceConfig config)
         {
@@ -18,34 +18,22 @@ namespace Project.Entities
             _spawnArea = new SpawnAreaModel(_config.SpawnCenter, _config.SpawnRange);
         }
 
-        public bool TryGetSpawnRequest(out SpawnArchetypeData spawnData,
-            out Vector3 spawnPosition,
-            out Quaternion bodyRotation)
+        public SpawnEntityData TryGetSpawnRequest()
         {
-            _eligibleSpawnDataBuffer.Clear();
+            _spawnDataBuffer.Clear();
 
-            foreach (var candidate in _config.SpawnData)
+            if (!TryFillSpawnBuffer())
             {
-                if (!CanSpawn(candidate))
-                {
-                    continue;
-                }
-
-                _eligibleSpawnDataBuffer.Add(candidate);
+                return null;
             }
 
-            if (_eligibleSpawnDataBuffer.Count == 0)
+            var archetypeData = _spawnDataBuffer[Random.Range(0, _spawnDataBuffer.Count)];
+            return new SpawnEntityData
             {
-                spawnData = null;
-                spawnPosition = default;
-                bodyRotation = default;
-                return false;
-            }
-
-            spawnData = _eligibleSpawnDataBuffer[Random.Range(0, _eligibleSpawnDataBuffer.Count)];
-            spawnPosition = _spawnArea.GetRandomPosition(spawnData.MinSpawnY, spawnData.MaxSpawnY);
-            bodyRotation = _spawnArea.GetRandomBodyRotation();
-            return true;
+                ArchetypeData = archetypeData,
+                SpawnPosition = _spawnArea.GetRandomPosition(archetypeData.MinSpawnY, archetypeData.MaxSpawnY),
+                BodyRotation = _spawnArea.GetRandomBodyRotation()
+            };
         }
 
         public void RegisterSpawn(EntityKind kind)
@@ -74,6 +62,26 @@ namespace Project.Entities
             }
 
             _aliveCountByKind[kind] = current;
+        }
+
+        private bool TryFillSpawnBuffer()
+        {
+            foreach (var spawnData in _config.SpawnData)
+            {
+                if (!CanSpawn(spawnData))
+                {
+                    continue;
+                }
+
+                _spawnDataBuffer.Add(spawnData);
+            }
+
+            if (_spawnDataBuffer.Count == 0)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         private bool CanSpawn(SpawnArchetypeData spawnData)
